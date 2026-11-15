@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { MdPrint, MdErrorOutline } from 'react-icons/md'
 import api, { errorMessage } from '../../api/client'
@@ -14,12 +14,23 @@ const CertificatePrint = () => {
   const navigate = useNavigate()
   const { logo, settings } = useSettings()
   const [c, setC] = useState(null); const [err, setErr] = useState('')
+  // En pantallas angostas el diploma conserva su diseño horizontal y se escala al ancho disponible.
+  const box = useRef(null); const sheet = useRef(null); const [fit, setFit] = useState({ scale: 1, height: null })
+  useLayoutEffect(() => {
+    if (!c || !box.current || !sheet.current) return undefined
+    const measure = () => { const w = box.current.clientWidth; const sw = sheet.current.offsetWidth; const scale = sw ? Math.min(1, w / sw) : 1; setFit({ scale, height: scale < 1 ? sheet.current.offsetHeight * scale : null }) }
+    measure()
+    const ro = new ResizeObserver(measure); ro.observe(box.current)
+    return () => ro.disconnect()
+  }, [c])
   useEffect(() => { api.get(`/academico/certificados/${id}`).then(({ data }) => setC(data)).catch((e) => setErr(errorMessage(e))) }, [id])
   useEffect(() => { if (c) { const t = document.title; document.title = `Certificado_${c.numberLabel}`; return () => { document.title = t } } return undefined }, [c])
   if (err) return <div className="alert bad"><MdErrorOutline /><span>{err}</span></div>
   if (!c) return <div className="splash"><Spinner /></div>
   const s = c.snapshot
-  const verifyUrl = `${window.location.origin}/verificar/${c.verificationCode}`
+  // Dirección pública del sistema (aunque el certificado se imprima desde un equipo de desarrollo).
+  const origin = import.meta.env.REACT_APP_PUBLIC_URL || (/localhost|127\.0\.0\.1|centro-vacunacion\.vercel\.app/.test(window.location.hostname) ? 'https://integra-ips.vercel.app' : window.location.origin)
+  const verifyUrl = `${origin.replace(/\/$/, '')}/verificar/${c.verificationCode}`
   return (
     <div className="cy-detail-page">
       <div className="cy-toolbar no-print" style={{ maxWidth: '279mm' }}>
@@ -27,7 +38,8 @@ const CertificatePrint = () => {
         <button type="button" className="btn btn-primary" onClick={() => window.print()}><MdPrint /> Imprimir / Guardar PDF</button>
       </div>
       {c.voided && <div className="alert bad no-print" style={{ maxWidth: '279mm', margin: '0 auto 12px' }}><span>Certificado anulado: {c.voidReason}</span></div>}
-      <article className="cy-sheet sheet-landscape" style={{ position: 'relative', textAlign: 'center', padding: '14mm 18mm', border: '6px double #1F2A44' }}>
+      <div ref={box} className="cert-fit" style={{ height: fit.height ?? undefined }}>
+      <article ref={sheet} className="cy-sheet sheet-landscape cert-sheet" style={{ position: 'relative', textAlign: 'center', padding: '14mm 18mm', border: '6px double #1F2A44', ...(fit.scale < 1 ? { transform: `scale(${fit.scale})`, transformOrigin: 'top left' } : {}) }}>
         {c.voided && <div aria-hidden="true" style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 110, fontWeight: 800, color: 'rgba(220,38,38,.15)', transform: 'rotate(-15deg)', pointerEvents: 'none' }}>ANULADO</div>}
         <img src={s.logoUrl || settings?.eduLogoUrl || logo} alt={s.institution} style={{ maxHeight: 70, maxWidth: 240, objectFit: 'contain' }} />
         <p style={{ margin: '4mm 0 0', fontSize: 12, letterSpacing: '.08em', textTransform: 'uppercase', color: '#6b7280' }}>{s.institution}{s.nit ? ` · NIT ${s.nit}` : ''}</p>
@@ -37,7 +49,7 @@ const CertificatePrint = () => {
         <p style={{ margin: '3mm 0 1mm', fontSize: 26, fontWeight: 700 }}>{s.student.name}</p>
         <p style={{ margin: 0, fontSize: 13 }}>{s.student.docType} {s.student.docNumber}</p>
         <p style={{ margin: '6mm auto 0', maxWidth: '200mm', fontSize: 14, lineHeight: 1.6 }}>
-          Por haber cursado y aprobado el programa <b>{s.program.name}</b>{s.program.occupation ? <>, que lo acredita como <b>{s.program.occupation}</b></> : ''}, con una intensidad de <b>{c.hours.toLocaleString('es-CO')} horas</b>, de conformidad con el Decreto 1075 de 2015.
+          {c.certType === 'asistencia' ? 'Por haber asistido y participado en el programa' : 'Por haber cursado y aprobado el programa'} <b>{s.program.name}</b>{s.program.occupation ? <>, que lo acredita como <b>{s.program.occupation}</b></> : ''}, con una intensidad de <b>{c.hours.toLocaleString('es-CO')} horas</b>, de conformidad con el Decreto 1075 de 2015.
         </p>
         <p style={{ margin: '4mm 0 0', fontSize: 13 }}>Dado en {s.city || '—'}, el {longDate(c.issuedAt)}.</p>
         <div style={{ display: 'flex', justifyContent: 'space-around', alignItems: 'flex-end', marginTop: '12mm', gap: '10mm' }}>
@@ -49,6 +61,7 @@ const CertificatePrint = () => {
           <span>Verifica su autenticidad en {verifyUrl} · código <b style={{ letterSpacing: '.1em' }}>{c.verificationCode}</b></span>
         </div>
       </article>
+      </div>
     </div>
   )
 }

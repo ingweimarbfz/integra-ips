@@ -133,9 +133,9 @@
 }
 
 @media screen and (max-width: 760px) {
-  .cy-filters { grid-template-columns: 1fr; }
+  .cy-filters { grid-template-columns: minmax(0, 1fr); }
   .cy-sheet { padding: 6mm; }
-  .cy-sheet-header, .cy-patient-band, .cy-notes, .cy-signatures { grid-template-columns: 1fr; }
+  .cy-sheet-header, .cy-patient-band, .cy-notes, .cy-signatures { grid-template-columns: minmax(0, 1fr); }
   .cy-grid, .cy-checks { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
@@ -207,7 +207,7 @@
 .tr-days-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6mm; align-items: start; }
 .tr-days td, .tr-days th { padding: 2px 6px !important; font-size: 10px !important; }
 .tr-days .badge { font-size: 9.5px; padding: 0 6px; }
-@media screen and (max-width: 760px) { .tr-days-grid { grid-template-columns: 1fr; } }
+@media screen and (max-width: 760px) { .tr-days-grid { grid-template-columns: minmax(0, 1fr); } }
 @media print {
   .tr-report .cy-sheet { max-width: none; }
   .tr-report .cy-section { break-inside: auto; }
@@ -233,7 +233,7 @@
 .vr-chart { border: 1px solid #E5E7EB; border-radius: 8px; padding: 3mm 3mm 1mm; break-inside: avoid; }
 .vr-chart.wide { grid-column: 1 / -1; }
 .vr-chart h4 { margin: 0 0 2mm; font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: #4B5563; }
-@media screen and (max-width: 760px) { .vr-charts { grid-template-columns: 1fr; } }
+@media screen and (max-width: 760px) { .vr-charts { grid-template-columns: minmax(0, 1fr); } }
 @media print {
   .vr-page .cy-sheet { max-width: none; }
   .vr-charts { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -253,3 +253,9 @@
 .bill-kpis .kpi-value { font-size: 21px !important; white-space: nowrap; }
 @media (max-width: 1500px) { .bill-kpis { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
 @media (max-width: 640px) { .bill-kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); } .bill-kpis .kpi-value { font-size: 18px !important; } }
+
+/* Diploma: tamaño fijo horizontal (en celular se escala completo, como en escritorio) */
+.cert-fit { width: 100%; overflow: hidden; }
+.cert-sheet { width: 279mm; max-width: none !important; box-sizing: border-box; overflow: visible !important; }
+@media screen and (max-width: 760px) { .cert-sheet { padding: 14mm 18mm !important; } }
+@media print { .cert-fit { height: auto !important; overflow: visible; } .cert-sheet { transform: none !important; width: 100%; } }

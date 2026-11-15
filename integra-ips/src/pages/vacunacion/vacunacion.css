@@ -29,4 +29,4 @@
 .rem-toggle input:focus-visible + .rem-toggle-ui { outline: 2px solid var(--brand); outline-offset: 2px; }
 .rem-toggle b { display: block; color: var(--ink); font-size: 14px; }
 .rem-toggle small { color: var(--muted); font-size: 12px; }
-@media (max-width: 760px) { .rem-fields, .rem-toggles { grid-template-columns: 1fr; } }
+@media (max-width: 760px) { .rem-fields, .rem-toggles { grid-template-columns: minmax(0, 1fr); } }
