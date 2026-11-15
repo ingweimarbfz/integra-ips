@@ -30,7 +30,7 @@ const ColdChainReminderSettings = () => {
             <label className="switch"><input type="checkbox" checked={f.enabled} onChange={(e) => setF({ ...f, enabled: e.target.checked })} /> {f.enabled ? 'Recordatorios activos' : 'Recordatorios desactivados'}</label>
             <div className="stack" style={{ gap: 8, opacity: f.enabled ? 1 : 0.55 }}>
               {f.reminders.map((r, i) => (
-                <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
                   <input type="time" className="input" style={{ width: 130 }} value={r.time} onChange={(e) => setRow(i, 'time', e.target.value)} aria-label="Hora del recordatorio" />
                   <span className="hint" style={{ whiteSpace: 'nowrap' }}>si no se ha registrado la</span>
                   <select className="input" style={{ width: 120 }} value={r.shift} onChange={(e) => setRow(i, 'shift', e.target.value)} aria-label="Jornada">{Object.entries(SHIFTS).map(([k, v]) => <option key={k} value={k}>{v}</option>)}</select>

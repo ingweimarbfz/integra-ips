@@ -31,7 +31,7 @@
 .ldoc-sig .pending { color: #C27803; font-weight: 600; }
 .ldoc-foot { margin-top: 22px; padding-top: 8px; border-top: 1px solid #E6E1F0; display: flex; justify-content: space-between; font-size: 9.5px; color: #7A7391; gap: 10px; }
 .ldoc-note { margin-top: 10px; font-size: 9.5px; color: #7A7391; }
-@media screen and (max-width: 700px) { .ldoc { padding: 18px 16px; } .ldoc-parties, .ldoc-sigs { grid-template-columns: 1fr; } .ldoc-head { grid-template-columns: auto 1fr; } .ldoc-meta { grid-column: 1 / -1; text-align: left; } }
+@media screen and (max-width: 700px) { .ldoc { padding: 18px 16px; } .ldoc-parties, .ldoc-sigs { grid-template-columns: minmax(0, 1fr); } .ldoc-head { grid-template-columns: auto 1fr; } .ldoc-meta { grid-column: 1 / -1; text-align: left; } }
 /* Impresión: solo el documento legal. LegalGate envuelve toda la app, así que estas reglas no pueden ser
    globales (antes ocultaban con visibility todo lo demás y los otros formatos salían en blanco). */
 @page ldoc { size: letter; margin: 14mm 14mm 12mm; }
@@ -72,6 +72,6 @@
 .lterms-scroll { overflow-y: auto; padding: 0; background: #F4F1FA; }
 .lterms-scroll .ldoc { box-shadow: none; border-radius: 0; padding: 18px 22px; }
 .lterms-foot { padding: 14px 20px; border-top: 1px solid #E6E1F0; display: flex; gap: 12px; align-items: center; justify-content: space-between; flex-wrap: wrap; }
-@media (max-width: 700px) { .lgate-form { grid-template-columns: 1fr; } }
+@media (max-width: 700px) { .lgate-form { grid-template-columns: minmax(0, 1fr); } }
 
 img.ldoc-mark { background: none; padding: 0; object-fit: contain; }
