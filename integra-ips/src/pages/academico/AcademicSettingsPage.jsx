@@ -43,9 +43,6 @@ const PlanForm = ({ initial, onClose, onSaved }) => {
 const AcademicSettingsPage = () => {
   const [toast, toastNode] = useToast()
   const [f, setF] = useState(null)
-  // IIPS-029: ¿el servidor tiene JaaS (8x8) configurado para el aula virtual?
-  const [jaas, setJaas] = useState(false)
-  useEffect(() => { api.get('/academico/aula-virtual-estado').then(({ data }) => setJaas(Boolean(data.jaas))).catch(() => {}) }, [])
   const [plans, setPlans] = useState([])
   const [staff, setStaff] = useState([])
   const [error, setError] = useState(''); const [saving, setSaving] = useState(false)
@@ -95,7 +92,6 @@ const AcademicSettingsPage = () => {
               <div className="field"><label>Asistencia mínima (%)</label><input type="number" min="0" max="100" value={f.minAttendancePct ?? 80} onChange={(e) => setF({ ...f, minAttendancePct: e.target.value })} /><span className="hint">Por debajo, el estudiante aparece en riesgo.</span></div>
               <div className="field"><label>Nota mínima aprobatoria</label><input type="number" min="0" max="5" step="0.1" value={f.passingScore ?? 3} onChange={(e) => setF({ ...f, passingScore: e.target.value })} /><span className="hint">Escala de 0,0 a 5,0.</span></div>
               <div className="field" style={{ gridColumn: 'span 1' }}><label>Director(a) de educación</label><select value={f.directorUserId || ''} onChange={(e) => setF({ ...f, directorUserId: e.target.value })}><option value="">Solo el administrador firma</option>{staff.map((u) => <option key={u.id} value={u.id}>{u.fullName}</option>)}</select><span className="hint">Firma las actas que cierran los docentes (con su firma digital o dibujándola).</span></div>
-              <div className="field" style={{ gridColumn: 'span 2' }}><label>Servidor del aula virtual (Jitsi)</label><input value={f.jitsiDomain || 'meet.jit.si'} onChange={(e) => setF({ ...f, jitsiDomain: e.target.value })} placeholder="meet.jit.si" /><span className="hint">{jaas ? 'JaaS (8x8) está configurado en el servidor: el aula usa JaaS y este campo no aplica.' : 'meet.jit.si es gratis (corta a los 5 min dentro del sistema). Para clases largas configura JaaS (8x8, plan Dev gratuito) en el servidor.'}</span></div>
             </div>
           </Card>
           <Card title="Reglamento estudiantil" subtitle={`Versión ${f.rulesVersion} · se anexa al contrato y el estudiante lo acepta al firmar. Si cambias el texto sube la versión.`} icon={<MdGavel style={{ color: 'var(--brand)' }} />}>
