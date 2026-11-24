@@ -71,7 +71,7 @@ const VaccinationRecords = () => {
       <PageHead title="Consultar vacunación" subtitle="Registro nominal de dosis, carnet de vacunación, ESAVI y frascos multidosis abiertos">
         <button type="button" className="btn btn-outline" onClick={exportCsv}><MdDownload /> Exportar para PAIWEB (CSV)</button>
       </PageHead>
-      <div className="module-switch" style={{ marginBottom: 14 }} role="tablist">
+      <div className="module-switch inline" style={{ marginBottom: 14 }} role="tablist">
         <button type="button" className={tab === 'registros' ? 'on' : ''} onClick={() => setTab('registros')}>Dosis aplicadas</button>
         <button type="button" className={tab === 'esavi' ? 'on' : ''} onClick={() => setTab('esavi')}>ESAVI {pendingEsavi > 0 && <span className="badge warn">{pendingEsavi}</span>}</button>
         <button type="button" className={tab === 'frascos' ? 'on' : ''} onClick={() => setTab('frascos')}>Frascos abiertos</button>

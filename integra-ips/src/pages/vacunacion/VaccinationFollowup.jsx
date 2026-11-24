@@ -20,7 +20,7 @@ const VaccinationFollowup = () => {
     <>
       <PageHead title="Seguimiento de dosis" subtitle="Personas con esquemas incompletos: dosis atrasadas para contactar y próximas para recordar" />
       {err && <div className="alert bad"><MdErrorOutline /><span>{err}</span></div>}
-      <div className="module-switch" style={{ marginBottom: 14 }} role="tablist">
+      <div className="module-switch inline" style={{ marginBottom: 14 }} role="tablist">
         <button type="button" className={filter === 'atrasadas' ? 'on' : ''} onClick={() => setFilter('atrasadas')}>Atrasadas {count('atrasadas') > 0 && <span className="badge warn">{count('atrasadas')}</span>}</button>
         <button type="button" className={filter === 'proximas' ? 'on' : ''} onClick={() => setFilter('proximas')}>Próximos 30 días {count('proximas') > 0 && <span className="badge">{count('proximas')}</span>}</button>
         <button type="button" className={filter === 'todas' ? 'on' : ''} onClick={() => setFilter('todas')}>Todas</button>

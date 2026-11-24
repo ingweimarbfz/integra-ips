@@ -73,8 +73,8 @@ export const CorrNew = () => {
     <>
       <PageHead title={parent ? `Responder ${parent.code}` : 'Radicar correspondencia'} subtitle="El consecutivo se asigna por área y año. Lo recibe la persona o el encargado del área en su bandeja." />
       <Card>
-        <div className="form-grid" style={{ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
-          <div className="field span-all"><label>Sentido</label><div className="module-switch inline">{Object.entries(DIR).map(([k, l]) => <button key={k} type="button" className={f.direction === k ? 'on' : ''} onClick={() => setF({ ...f, direction: k })}>{l}</button>)}</div></div>
+        <div className="form-grid corr-form">
+          <div className="field"><label>Sentido</label><div className="module-switch inline">{Object.entries(DIR).map(([k, l]) => <button key={k} type="button" className={f.direction === k ? 'on' : ''} onClick={() => setF({ ...f, direction: k })}>{l}</button>)}</div></div>
           <div className="field"><label>Tipo <span className="req">*</span></label><select value={f.kind} onChange={set('kind')}>{Object.entries(cat.kinds).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
           <div className="field"><label>Prioridad</label><select value={f.priority} onChange={set('priority')}><option value="normal">Normal</option><option value="urgente">Urgente</option></select></div>
           <div className="field span-all"><label>Asunto <span className="req">*</span></label><input value={f.subject} onChange={set('subject')} maxLength={300} placeholder="Ej. Solicitud de certificado laboral" /></div>
@@ -84,13 +84,13 @@ export const CorrNew = () => {
           <div className="field"><label>Entidad o empresa</label><input value={f.senderOrg} onChange={set('senderOrg')} /></div>
           <div className="field"><label>Documento / NIT</label><input value={f.senderDoc} onChange={set('senderDoc')} /></div>
           <div className="field"><label>Teléfono o correo</label><input value={f.senderContact} onChange={set('senderContact')} /></div>
-          <div className="field span-all"><label>Dirección</label><input value={f.senderAddress} onChange={set('senderAddress')} /></div>
+          <div className="field span-2"><label>Dirección</label><input value={f.senderAddress} onChange={set('senderAddress')} /></div>
           <h4 className="span-all" style={{ margin: '6px 0 0' }}>Recepción</h4>
           <div className="field"><label>Transportadora / mensajería</label><input value={f.carrier} onChange={set('carrier')} placeholder="Ej. Servientrega, 4-72, a mano" /></div>
           <div className="field"><label>Número de guía</label><input value={f.trackingNumber} onChange={set('trackingNumber')} /></div>
           <div className="field"><label>Folios</label><input type="number" min="0" value={f.folios} onChange={set('folios')} /></div>
           <div className="field"><label>Fecha y hora de recibido</label><input type="datetime-local" value={f.receivedAt} onChange={set('receivedAt')} /><span className="hint">Vacío = ahora.</span></div>
-          <div className="field span-all"><label>Anexos</label><input value={f.attachmentsDesc} onChange={set('attachmentsDesc')} placeholder="Ej. 1 CD, 2 copias de cédula" /></div>
+          <div className="field span-2"><label>Anexos</label><input value={f.attachmentsDesc} onChange={set('attachmentsDesc')} placeholder="Ej. 1 CD, 2 copias de cédula" /></div>
           <h4 className="span-all" style={{ margin: '6px 0 0' }}>Dirigido a</h4>
           <div className="field"><label>Área <span className="req">*</span></label><select value={f.areaId} onChange={set('areaId')}><option value="">Selecciona…</option>{cat.areas.filter((a) => a.active).map((a) => <option key={a.id} value={a.id}>{a.name} ({a.prefix})</option>)}</select></div>
           <div className="field"><label>Persona</label><select value={f.recipientUserId} onChange={set('recipientUserId')}><option value="">El encargado del área</option>{cat.users.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</select></div>

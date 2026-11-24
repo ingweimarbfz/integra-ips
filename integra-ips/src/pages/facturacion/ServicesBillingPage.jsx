@@ -229,7 +229,7 @@ const ServicesBillingPage = () => {
         <button type="button" className="btn btn-primary" onClick={() => setModal({ invoice: null })} disabled={!catalog.length}><MdAdd /> Facturar servicio</button>
       </PageHead>
       {pending.length > 0 && (
-        <div className="module-switch" style={{ marginBottom: 14 }} role="tablist">
+        <div className="module-switch inline" style={{ marginBottom: 14 }} role="tablist">
           <button type="button" className={tab === 'facturados' ? 'on' : ''} onClick={() => setTab('facturados')}>Facturados</button>
           <button type="button" className={tab === 'por_facturar' ? 'on' : ''} onClick={() => setTab('por_facturar')}>Registrados sin factura <span className="badge warn">{pending.length}</span></button>
         </div>
