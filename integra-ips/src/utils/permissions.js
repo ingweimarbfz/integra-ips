@@ -2,7 +2,7 @@ import {
   MdDashboard, MdThermostat, MdNoteAdd, MdManageSearch, MdPeople, MdSettings, MdPerson,
   MdEmergency, MdInventory2, MdBadge, MdLocalHospital, MdLocalShipping, MdDirectionsCar, MdAssignment, MdSpeed,
   MdMedicalServices, MdAccountTree, MdVolunteerActivism, MdFactCheck, MdSchool, MdWarehouse, MdCategory, MdSwapHoriz, MdHealing, MdAirportShuttle, MdDraw, MdTune, MdInsights, MdGroups, MdRule, MdMenuBook, MdFolderShared, MdMedication, MdReceiptLong, MdStorefront, MdPriceChange, MdAccountBalance, MdVaccines, MdEventRepeat, MdNotificationsActive, MdClass, MdHowToReg, MdMenuBook as MdPensum, MdAccountBalanceWallet, MdHandshake, MdMeetingRoom as MdMeetingRoomIcon, MdWorkspacePremium as MdWorkspacePremiumIcon, MdCalendarMonth, MdGrading, MdRateReview, MdLibraryBooks
-  , MdBeachAccess, MdBusinessCenter, MdContactPage
+  , MdBeachAccess, MdBusinessCenter, MdContactPage, MdPersonSearch
 } from 'react-icons/md'
 
 export const ROLE_LABELS = {
@@ -125,7 +125,7 @@ const SHARED = [
 
 const NAV = {
   ips: [
-    { title: 'General', items: [{ to: '/', label: 'Dashboard', icon: MdDashboard, roles: ALL, end: true, module: 'ips_dashboard', service: 'any' }] },
+    { title: 'General', items: [{ to: '/', label: 'Dashboard', icon: MdDashboard, roles: ALL, end: true, module: 'ips_dashboard', service: 'any' }, { to: '/pacientes', label: 'Historial por persona', icon: MdPersonSearch, roles: STAFF, module: ['citologias', 'vacunacion', 'traslado'] }] },
     {
       title: 'Citologías',
       items: [
