@@ -99,7 +99,7 @@ const ProductsPage = () => {
       <Card flush>
         <div className="table-toolbar">
           <div className="input-icon"><MdSearch /><input className="input" placeholder="Buscar por nombre, código, principio activo, marca o INVIMA" value={q} onChange={(e) => setQ(e.target.value)} /></div>
-          <div className="module-switch">
+          <div className="module-switch inline">
             <button type="button" className={!cat ? 'on' : ''} onClick={() => setCat('')}>Todos</button>
             {CATEGORY_ORDER.map((c) => <button key={c} type="button" className={cat === c ? 'on' : ''} onClick={() => setCat(c)}>{CATEGORY_LABELS[c]}</button>)}
           </div>
