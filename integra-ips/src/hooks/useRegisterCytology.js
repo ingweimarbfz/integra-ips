@@ -66,6 +66,15 @@ const useRegisterCytology = () => {
     }))
   }, [])
   const inv = useServiceInvoice('citologia', onInvoice)
+  // IIPS-027: desde el historial por persona (?documento=) se llenan los datos de la paciente.
+  useEffect(() => {
+    const doc = new URLSearchParams(window.location.search).get('documento')
+    if (!doc) return
+    api.get(`/pacientes/${doc}`).then(({ data }) => {
+      const p = data.person
+      setDataCytology((prev) => ({ ...prev, numDocumento: doc, ...(p ? { nombre: p.names || prev.nombre, apellidos: p.surnames || prev.apellidos, tipoDocumento: p.documentType || prev.tipoDocumento, fechaNacimiento: p.birthDate || prev.fechaNacimiento, celular: p.phone || prev.celular, email: p.email || prev.email, direccion: p.address || prev.direccion, municipio: p.municipality || prev.municipio, ocupacion: p.occupation || prev.ocupacion } : {}) }))
+    }).catch(() => {})
+  }, [])
   const { billingOn, invoice } = inv
 
   const loadDefaults = useCallback(async () => {
