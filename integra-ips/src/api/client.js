@@ -21,7 +21,14 @@ const baseAdapter = axios.defaults.adapter
 const cacheKey = (c) => [c.url, JSON.stringify(c.params || {}), c.headers?.Authorization || ''].join('|')
 const cachingAdapter = (config) => {
   const method = (config.method || 'get').toLowerCase()
-  if (method !== 'get') return baseAdapter(config).then((r) => { cache.clear(); return r })
+  if (method !== 'get') {
+    return baseAdapter(config).then((r) => {
+      cache.clear()
+      // IIPS-022: un cambio puede resolver o generar avisos → el centro de notificaciones se actualiza.
+      if (!/\/(login|auth)/.test(config.url || '')) { try { window.dispatchEvent(new Event('cv:alerts-refresh')) } catch { /* sin ventana */ } }
+      return r
+    })
+  }
   if (config.responseType === 'blob' || config.noCache || /\/auth\/me$/.test(config.url || '')) return baseAdapter(config)
   const key = cacheKey(config)
   const hit = cache.get(key)
