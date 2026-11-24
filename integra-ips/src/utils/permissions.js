@@ -84,12 +84,12 @@ export const canSee = (user, { roles, module, grantable = true, service } = {}) 
 // Módulos del sistema. Para sumar uno nuevo: agregarlo aquí con su menú y sus rutas en App.jsx.
 export const MODULES = [
   { id: 'ips', label: 'IPS', fullLabel: 'Servicios de IPS', icon: MdLocalHospital, home: '/', visible: (u) => ownItems('ips', u).length > 0 },
-  { id: 'socorro', label: 'Operaciones Generales', fullLabel: 'Operaciones Generales: Socorro y Educación', icon: MdEmergency, home: '/socorro', visible: (u) => ownItems('socorro', u).length > 0 },
-  { id: 'estandares', label: 'Calidad IPS y Estándares', fullLabel: 'Calidad IPS y Estándares', tabs: [{ id: 'estandares', label: 'Estándares' }, { id: 'docs', label: 'Doc. Generales', prefix: '/estandares/doc-generales' }], icon: MdRule, home: '/estandares', visible: (u) => ownItems('estandares', u).length > 0 },
+  { id: 'socorro', label: 'Operaciones Generales', short: 'Operaciones', fullLabel: 'Operaciones Generales: Socorro y Educación', icon: MdEmergency, home: '/socorro', visible: (u) => ownItems('socorro', u).length > 0 },
+  { id: 'estandares', label: 'Calidad IPS y Estándares', short: 'Calidad', fullLabel: 'Calidad IPS y Estándares', tabs: [{ id: 'estandares', label: 'Estándares' }, { id: 'docs', label: 'Doc. Generales', prefix: '/estandares/doc-generales' }], icon: MdRule, home: '/estandares', visible: (u) => ownItems('estandares', u).length > 0 },
   // IIPS-026 · Talento humano de otras dependencias (misma interfaz que la de IPS, filtrada por dependencia).
-  { id: 'talento', label: 'Talento Humano', fullLabel: 'Talento Humano · otras dependencias', icon: MdBusinessCenter, home: '/talento-humano', visible: (u) => ownItems('talento', u).length > 0 },
+  { id: 'talento', label: 'Talento Humano', short: 'Talento H.', fullLabel: 'Talento Humano · otras dependencias', icon: MdBusinessCenter, home: '/talento-humano', visible: (u) => ownItems('talento', u).length > 0 },
   // IIPS-030 · Gestión documental y correspondencia (ventanilla única).
-  { id: 'documental', label: 'Gestión documental', fullLabel: 'Gestión documental y correspondencia', icon: MdMarkunread, home: '/correspondencia', visible: (u) => ownItems('documental', u).length > 0 },
+  { id: 'documental', label: 'Gestión documental', short: 'Documental', fullLabel: 'Gestión documental y correspondencia', icon: MdMarkunread, home: '/correspondencia', visible: (u) => ownItems('documental', u).length > 0 },
   // Académico ETDH (IIPS-019). Las "Actividades de educación" de Operaciones Generales son otra cosa (salidas fuera del aula).
   { id: 'educacion', label: 'Educación', fullLabel: 'Educación · Institución ETDH', icon: MdSchool, home: '/educacion', visible: (u) => ownItems('educacion', u).length > 0 }
 ]

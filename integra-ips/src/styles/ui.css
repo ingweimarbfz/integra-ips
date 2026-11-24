@@ -1065,3 +1065,13 @@ a.th-std:hover { box-shadow: var(--shadow-lg, 0 6px 18px rgba(0,0,0,.08)); }
 /* Mi cuenta como sección desplegable al pie. */
 .sidebar-account.collapsible { gap: 2px; }
 .sidebar-account .nav-section-toggle { padding-left: 4px; padding-right: 4px; }
+
+/* IIPS-033 · Fila de módulos arriba de la miga de pan (escritorio); si no caben, se desplaza de lado sin desbordar. */
+.topbar-modules { display: none; }
+@media screen and (min-width: 1025px) {
+  .crumbs-tabs { display: none !important; }
+  .topbar-modules { display: flex; align-items: center; gap: 10px; padding: 6px 24px; background: var(--surface); border-bottom: 1px solid var(--line-2); overflow-x: auto; scrollbar-width: thin; }
+  .topbar-modules .module-switch.bar { flex: 0 0 auto; }
+  .topbar-modules .module-switch.bar button { white-space: nowrap; }
+  .topbar-crumbs { height: 34px; overflow: hidden; }
+}
