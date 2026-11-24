@@ -18,7 +18,6 @@ const ClassRow = ({ x, onOpen }) => (
     <span className={`badge ${x.modality === 'virtual' ? 'info' : 'brand'}`}>{x.modality === 'virtual' ? 'Virtual' : 'Presencial'}</span>
     {x.status === 'realizada' && <span className="badge ok">Realizada</span>}
     <Link className="btn btn-outline btn-sm" to={`/educacion/clases/${x.id}/asistencia`}><MdFactCheck /> Asistencia</Link>
-    {x.modality === 'virtual' && x.platform === 'jitsi' && <a className="btn btn-primary btn-sm" href={`/educacion/aula-virtual/${x.id}`}><MdOpenInNew /> Entrar al aula</a>}
     {x.modality === 'virtual' && x.meetingUrl && <a className="btn btn-primary btn-sm" href={x.meetingUrl} target="_blank" rel="noreferrer"><MdOpenInNew /> Abrir {x.platformLabel || 'clase'}</a>}
     <button type="button" className="btn btn-ghost btn-icon" aria-label="Enlace, tema o marcar realizada" title="Enlace, tema o marcar realizada" onClick={() => onOpen(x)}><MdEdit /></button>
   </div>

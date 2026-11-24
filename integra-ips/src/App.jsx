@@ -38,7 +38,6 @@ const VacationsPage = lazy(() => import('./pages/talento/Vacations').then((m) =>
 const MyCvPage = lazy(() => import('./pages/MyCvPage'))
 const Corr = (name) => lazy(() => import('./pages/correspondencia/Correspondence').then((m) => ({ default: m[name] })))
 const CorrDashboard = Corr('CorrDashboard'); const CorrNew = Corr('CorrNew'); const CorrRegister = Corr('CorrRegister'); const CorrInbox = Corr('CorrInbox'); const CorrDetail = Corr('CorrDetail'); const CorrAreas = Corr('CorrAreas')
-const VirtualClassroom = lazy(() => import('./pages/academico/VirtualClassroom'))
 const CertTemplatesPage = lazy(() => import('./pages/academico/CertTemplates'))
 const PatientsSearch = lazy(() => import('./pages/PatientsPage').then((m) => ({ default: m.PatientsSearch })))
 const PatientDetail = lazy(() => import('./pages/PatientsPage').then((m) => ({ default: m.PatientDetail })))
@@ -259,7 +258,6 @@ const App = () => (
             <Route path="talento-humano/vacaciones" element={<Protected module="th_general" roles={STAFF}><VacationsPage key="general" /></Protected>} />
             <Route path="pacientes" element={<Protected module={['citologias', 'vacunacion', 'traslado']} roles={STAFF}><PatientsSearch /></Protected>} />
             <Route path="pacientes/:doc" element={<Protected module={['citologias', 'vacunacion', 'traslado']} roles={STAFF}><PatientDetail /></Protected>} />
-            <Route path="educacion/aula-virtual/:id" element={<Protected roles={['administrador', 'empleado', 'docente', 'estudiante']}><VirtualClassroom /></Protected>} />
             <Route path="educacion/plantillas-certificado" element={<Protected roles={ADMIN}><CertTemplatesPage /></Protected>} />
             <Route path="correspondencia" element={<Protected module="correspondencia" roles={STAFF}><CorrDashboard /></Protected>} />
             <Route path="correspondencia/radicar" element={<Protected module="correspondencia" roles={STAFF}><CorrNew /></Protected>} />

@@ -5,8 +5,7 @@ import api, { errorMessage } from '../../api/client'
 import { PageHead, Card, Modal, Empty, Spinner, useToast } from '../../components/ui'
 import { formatDate } from '../../utils/format'
 
-// IIPS-028: jitsi = aula virtual integrada (la sala la crea el sistema; no necesita enlace).
-export const PLATFORMS = { jitsi: 'Aula virtual integrada (Jitsi)', meet: 'Google Meet', teams: 'Microsoft Teams', zoom: 'Zoom', otro: 'Otra plataforma' }
+export const PLATFORMS = { meet: 'Google Meet', teams: 'Microsoft Teams', zoom: 'Zoom', otro: 'Otra plataforma' }
 const DAYS = [[1, 'Lun'], [2, 'Mar'], [3, 'Mié'], [4, 'Jue'], [5, 'Vie'], [6, 'Sáb'], [7, 'Dom']]
 const todayIso = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota' }).format(new Date())
 const addDays = (iso, n) => { const d = new Date(`${iso}T12:00:00Z`); d.setUTCDate(d.getUTCDate() + n); return d.toISOString().slice(0, 10) }
@@ -27,8 +26,7 @@ const ClassFields = ({ f, set, teachers, rooms = [], siteId }) => {
     {f.modality === 'virtual' ? (
       <>
         <div className="field"><label>Plataforma</label><select value={f.platform} onChange={set('platform')}>{Object.entries(PLATFORMS).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
-        {f.platform === 'jitsi' ? <div className="field"><label>Enlace</label><span className="hint">El sistema crea la sala de cada clase. Docente y estudiantes entran con el botón «Entrar al aula».</span></div>
-          : <div className="field"><label>Enlace de la clase</label><input value={f.meetingUrl} onChange={set('meetingUrl')} placeholder="https://meet.google.com/…" /></div>}
+        <div className="field"><label>Enlace de la clase</label><input value={f.meetingUrl} onChange={set('meetingUrl')} placeholder="https://meet.google.com/…" /></div>
       </>
     ) : options.length ? (
       <div className="field span-all"><label>Aula o salón</label><select value={f.classroomId || ''} onChange={set('classroomId')}><option value="">Selecciona el aula…</option>{options.map((r) => <option key={r.id} value={r.id}>{r.name}{r.capacity ? ` · ${r.capacity} puestos` : ''}{r.siteName ? ` · ${r.siteName}` : ''}</option>)}</select><span className="hint">El sistema no deja programar dos clases a la misma hora en la misma aula.</span></div>
@@ -125,7 +123,6 @@ export const SessionModal = ({ session, teachers = [], rooms = [], teacherMode =
           {session.cancelReason && <div style={{ fontSize: 12, color: 'var(--bad)' }}>Motivo: {session.cancelReason}</div>}
         </div>
         {session.status !== 'cancelada' && <Link className="btn btn-outline btn-sm" style={{ alignSelf: 'flex-start' }} to={`/educacion/clases/${session.id}/asistencia`}><MdFactCheck /> Asistencia y acta</Link>}
-        {session.modality === 'virtual' && session.platform === 'jitsi' && <a className="btn btn-primary btn-sm" style={{ alignSelf: 'flex-start' }} href={`/educacion/aula-virtual/${session.id}`}>Entrar al aula virtual</a>}
         {session.modality === 'virtual' && session.meetingUrl && <a className="btn btn-outline btn-sm" style={{ alignSelf: 'flex-start' }} href={session.meetingUrl} target="_blank" rel="noreferrer"><MdOpenInNew /> Abrir {session.platformLabel || 'la clase'}</a>}
         {editable && (
           <div className="form-grid" style={{ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
@@ -136,7 +133,7 @@ export const SessionModal = ({ session, teachers = [], rooms = [], teacherMode =
             </>}
             {teacherMode && f.modality === 'virtual' && <>
               <div className="field"><label>Plataforma</label><select value={f.platform} onChange={set('platform')}>{Object.entries(PLATFORMS).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
-              {f.platform !== 'jitsi' && <div className="field"><label>Enlace de la clase</label><input value={f.meetingUrl} onChange={set('meetingUrl')} placeholder="https://…" /></div>}
+              <div className="field"><label>Enlace de la clase</label><input value={f.meetingUrl} onChange={set('meetingUrl')} placeholder="https://…" /></div>
             </>}
             <div className="field span-all"><label>Tema de la clase</label><input value={f.topic} onChange={set('topic')} placeholder="Ej. RCP en adultos" /></div>
           </div>
