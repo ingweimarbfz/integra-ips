@@ -172,6 +172,12 @@ const TripDetail = () => {
           </section>
         )}
 
+        {t.crew?.length > 0 && (
+          <section className="cy-section">
+            <h3 className="cy-section-title">Tripulación</h3>
+            <div className="cy-grid">{t.crew.map((c) => <div key={c.id} className="cy-field"><span className="cy-field-label">{c.roleLabel}</span><span className="cy-field-value">{c.name} · {c.identification || 's/d'}</span></div>)}</div>
+          </section>
+        )}
         <TripSupplies t={t} onChange={setT} toast={toast} />
 
         <section className="cy-signatures" style={{ gridTemplateColumns: '1fr 1fr' }}>

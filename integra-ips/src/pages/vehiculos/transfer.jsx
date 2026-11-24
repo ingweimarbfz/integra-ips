@@ -1,5 +1,6 @@
 import React from 'react'
 import { sanitize, check } from '../../utils/validate'
+import api from '../../api/client'
 
 // Datos del traslado asistencial (ambulancias TAB/TAM).
 export const DOC_TYPES = { CC: 'Cédula de ciudadanía', TI: 'Tarjeta de identidad', RC: 'Registro civil', CE: 'Cédula de extranjería', PA: 'Pasaporte', PPT: 'Permiso por protección temporal', MS: 'Menor sin identificación', AS: 'Adulto sin identificación' }
@@ -58,3 +59,39 @@ export const TransferFields = ({ value, onChange }) => {
     </div>
   )
 }
+
+// ---------------------------------------------------------------- IIPS-025 · Tripulación
+// Busca un usuario registrado (por nombre o documento) para el rol indicado.
+export const UserPicker = ({ label, value, onChange, rol, required, hint }) => {
+  const [q, setQ] = React.useState('')
+  const [rows, setRows] = React.useState([])
+  React.useEffect(() => {
+    if (q.trim().length < 3) { setRows([]); return undefined }
+    const t = setTimeout(() => api.get('/vehiculos/tripulacion/buscar', { params: { q: q.trim(), rol } }).then(({ data }) => setRows(data)).catch(() => setRows([])), 250)
+    return () => clearTimeout(t)
+  }, [q, rol])
+  return (
+    <div className="field">
+      <label>{label}{required && <span className="req"> *</span>}</label>
+      {value ? (
+        <div className="picked-user"><span><b>{value.fullName}</b> · {value.identification || 's/d'}{value.roleLabel ? ` · ${value.roleLabel}` : ''}</span><button type="button" className="btn btn-ghost btn-sm" onClick={() => onChange(null)}>Cambiar</button></div>
+      ) : (
+        <>
+          <input value={q} onChange={(e) => setQ(e.target.value)} placeholder="Nombre o documento (mínimo 3 caracteres)" />
+          {rows.length > 0 && <div className="picker-list">{rows.map((u) => <button key={u.id} type="button" onClick={() => { onChange(u); setQ('') }}><b>{u.fullName}</b> <small>{u.identification} · {u.roleLabel}{u.siteName ? ` · ${u.siteName}` : ''}</small></button>)}</div>}
+          {q.trim().length >= 3 && rows.length === 0 && <span className="hint">Sin resultados. La persona debe estar registrada como usuario.</span>}
+        </>
+      )}
+      {hint && <span className="hint">{hint}</span>}
+    </div>
+  )
+}
+
+// TAB: auxiliar de traslado. TAM: auxiliar y médico. En un servicio, el auxiliar es opcional.
+export const CrewFields = ({ value, onChange, type, optional }) => (
+  <div className="grid grid-2" style={{ gap: 12 }}>
+    <UserPicker label="Auxiliar de traslado" required={!optional} value={value.auxiliar} onChange={(u) => onChange({ ...value, auxiliar: u })} hint={optional ? 'Si va un auxiliar, queda también en el personal del servicio.' : undefined} />
+    {(type === 'TAM' || value.medico) && <UserPicker label="Médico" required={type === 'TAM' && !optional} value={value.medico} onChange={(u) => onChange({ ...value, medico: u })} />}
+  </div>
+)
+export const crewPayload = (c) => [c.auxiliar && { userId: c.auxiliar.id, role: 'auxiliar' }, c.medico && { userId: c.medico.id, role: 'medico' }].filter(Boolean)

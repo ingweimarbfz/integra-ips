@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import MonthPicker, { shortMonth } from '../../components/MonthPicker'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts'
 import {
-  MdAirportShuttle, MdErrorOutline, MdWarning, MdLocalHospital, MdSpeed, MdFactCheck, MdPriorityHigh, MdArrowForward, MdPlace, MdInfo
+  MdAdd, MdAirportShuttle, MdErrorOutline, MdWarning, MdLocalHospital, MdSpeed, MdFactCheck, MdPriorityHigh, MdArrowForward, MdPlace, MdInfo
 } from 'react-icons/md'
 import api, { errorMessage } from '../../api/client'
 import { useAuth } from '../../context/AuthContext'
@@ -11,6 +11,7 @@ import { PageHead, Card, Empty, Spinner } from '../../components/ui'
 import { StatusPill, km, money } from './common'
 import { fmtDateTime } from '../socorro/common'
 import { PRIORITIES } from './transfer'
+import { NewTripModal } from './TripsPage'
 
 const axis = { fontSize: 11, fill: '#6B7280' }
 const currentMonth = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota' }).format(new Date()).slice(0, 7)
@@ -46,11 +47,16 @@ const AmbulanceDashboard = () => {
     return () => { alive = false }
   }, [month])
 
+  const [params, setParams] = useSearchParams()
+  const [newTransfer, setNewTransfer] = useState(Boolean(params.get('programado')))
   return (
     <>
       <PageHead title={driver ? 'Mi ambulancia' : 'Traslado asistencial'} subtitle={`${driver ? 'Ambulancia asignada' : 'Ambulancias TAB y TAM'} · ${monthLabel(month)}: traslados de pacientes, kilometraje, preoperacional y alertas.`}>
         <MonthPicker value={month} max={currentMonth()} onChange={setMonth} />
+        {/* IIPS-025: el traslado se crea desde aquí (antes solo desde el reporte de actividades). */}
+        <button type="button" className="btn btn-primary" onClick={() => setNewTransfer(true)}><MdAdd /> Nuevo traslado</button>
       </PageHead>
+      {newTransfer && <NewTripModal transferOnly plannedInitial={params.get('programado')} onClose={() => { setNewTransfer(false); setParams({}) }} />}
       {error && <div className="alert bad" style={{ marginBottom: 18 }}><MdErrorOutline /><span>{error}</span></div>}
       {!d && !error && <div className="splash" style={{ minHeight: 300 }}><Spinner /> Cargando…</div>}
       {d && d.ambulances.length === 0 && (

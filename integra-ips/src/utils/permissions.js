@@ -163,6 +163,7 @@ const NAV = {
         { to: '/socorro/voluntario', label: 'Mi panel de voluntario', icon: MdVolunteerActivism, roles: ['voluntario'], module: 'voluntario', grantable: false }
       ]
     },
+    { title: 'Programación', items: [{ to: '/socorro/programacion', label: 'Eventos programados y cotizaciones', icon: MdEventRepeat, roles: STAFF, module: ['socorro', 'educacion', 'flota'] }] },
     { title: 'Socorro', items: [{ to: '/socorro/eventos', label: 'Eventos y emergencias', icon: MdEmergency, roles: EVENTS, module: 'socorro' }] },
     { title: 'Educación', items: [{ to: '/socorro/educacion', label: 'Actividades de educación', icon: MdSchool, roles: EVENTS, module: 'educacion' }] },
     { title: 'Personas', items: [{ to: '/socorro/personas', label: 'Personas / voluntarios', icon: MdBadge, roles: STAFF, module: 'personas', end: true }, { to: '/socorro/personas/reporte', label: 'Reporte de voluntarios', icon: MdInsights, roles: STAFF, module: 'reporte_voluntarios' }] },
