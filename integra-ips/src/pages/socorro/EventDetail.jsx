@@ -22,12 +22,16 @@ const FinishModal = ({ event, onClose, onDone }) => {
   const [saving, setSaving] = useState(false)
   const complete = rows.every((r, i) => Number(r.returned) === event.materials[i].quantity)
   const setRow = (i, k, v) => setRows((rs) => rs.map((r, j) => (j === i ? { ...r, [k]: v } : r)))
+  // IIPS-024: estado por unidad (p. ej. cuál de las 2 camillas volvió mala). Se identifica cada unidad por número, serial o placa.
+  const toggleUnits = (i) => setRows((rs) => rs.map((r, j) => (j !== i ? r : r.units ? { ...r, units: undefined } : { ...r, units: Array.from({ length: event.materials[i].quantity }, (_, n) => ({ label: `${event.materials[i].item.name} #${n + 1}`, state: 'bueno', observation: '' })) })))
+  const setUnit = (i, n, k, v) => setRows((rs) => rs.map((r, j) => (j !== i ? r : { ...r, units: r.units.map((u, m) => (m === n ? { ...u, [k]: v } : u)) })))
 
   const submit = async () => {
     setError('')
     for (const [i, r] of rows.entries()) {
       const n = Number(r.returned)
       if (r.returned === '' || Number.isNaN(n) || n < 0 || n > event.materials[i].quantity) return setError(`Revisa la cantidad devuelta de ${event.materials[i].item.name}.`)
+      if (r.units?.some((u) => !u.label.trim())) return setError(`Identifica cada unidad de ${event.materials[i].item.name}.`)
     }
     setSaving(true)
     try {
@@ -55,8 +59,10 @@ const FinishModal = ({ event, onClose, onDone }) => {
                 <thead><tr><th>Elemento</th><th className="num">Salió</th><th>Regresa</th><th>Estado</th><th>Observación</th></tr></thead>
                 <tbody>
                   {event.materials.map((m, i) => (
-                    <tr key={m.id}>
-                      <td><strong style={{ color: 'var(--ink)' }}>{m.item.name}</strong></td>
+                    <React.Fragment key={m.id}>
+                    <tr>
+                      <td><strong style={{ color: 'var(--ink)' }}>{m.item.name}</strong>{m.item.warehouseName && <div style={{ fontSize: 11.5, color: 'var(--muted)' }}>{m.item.warehouseName}</div>}
+                        {m.quantity > 1 && <button type="button" className="btn btn-ghost btn-sm" style={{ padding: '0 4px', height: 22, fontSize: 11.5 }} onClick={() => toggleUnits(i)}>{rows[i].units ? 'Quitar detalle por unidad' : 'Estado por unidad'}</button>}</td>
                       <td className="num">{qty(m.quantity)}</td>
                       <td style={{ width: 90 }}><input className="input" type="number" min="0" max={m.quantity} value={rows[i].returned} onChange={(e) => setRow(i, 'returned', e.target.value)} style={{ height: 34 }} /></td>
                       <td style={{ width: 130 }}>
@@ -66,6 +72,14 @@ const FinishModal = ({ event, onClose, onDone }) => {
                       </td>
                       <td><input className="input" value={rows[i].observation} onChange={(e) => setRow(i, 'observation', e.target.value)} style={{ height: 34 }} placeholder="Opcional" /></td>
                     </tr>
+                    {rows[i].units?.map((u, n) => (
+                      <tr key={`${m.id}-u${n}`} className="unit-row">
+                        <td colSpan={3}><input className="input" value={u.label} onChange={(e) => setUnit(i, n, 'label', e.target.value)} style={{ height: 32 }} aria-label="Unidad" placeholder="Número, serial o placa" /></td>
+                        <td><select className="input" value={u.state} onChange={(e) => setUnit(i, n, 'state', e.target.value)} style={{ height: 32 }}>{Object.entries(STATE_LABELS).map(([v, l]) => <option key={v} value={v}>{l}</option>)}</select></td>
+                        <td><input className="input" value={u.observation} onChange={(e) => setUnit(i, n, 'observation', e.target.value)} style={{ height: 32 }} placeholder="Qué le pasó (opcional)" /></td>
+                      </tr>
+                    ))}
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>
@@ -305,7 +319,7 @@ const EventDetail = () => {
                         <td><strong style={{ color: 'var(--ink)' }}>{qty(m.quantity)}</strong></td>
                         <td><strong style={{ color: 'var(--ink)' }}>{m.item.name}</strong><div><span className={`badge ${CATEGORY_TONE[m.item.category]}`} style={{ fontSize: 11 }}>{CATEGORY_LABELS[m.item.category]}</span></div></td>
                         {!open && <td>{m.returned === m.quantity ? <span className="badge ok">{qty(m.returned)}</span> : <span className="badge bad">{qty(m.returned ?? 0)} de {qty(m.quantity)}</span>}</td>}
-                        <td><span className={`badge ${STATE_TONE[m.state]}`}>{STATE_LABELS[m.state]}</span></td>
+                        <td><span className={`badge ${STATE_TONE[m.state]}`}>{STATE_LABELS[m.state]}</span>{m.units?.filter((u) => u.state !== 'bueno').map((u) => <div key={u.id} style={{ fontSize: 11.5, marginTop: 3 }}><b>{u.label}</b>: {STATE_LABELS[u.state]}{u.observation ? ` · ${u.observation}` : ''}</div>)}</td>
                         <td style={{ maxWidth: 220, whiteSpace: 'normal' }}>{m.observation || <span style={{ color: 'var(--muted)' }}>—</span>}</td>
                         {canEdit && (
                           <td className="actions">
@@ -348,7 +362,7 @@ const EventDetail = () => {
                     {event.supplies.map((s) => (
                       <tr key={s.id}>
                         <td><strong style={{ color: 'var(--ink)' }}>{qty(s.quantity)}</strong> <span style={{ color: 'var(--muted)', fontSize: 12 }}>{s.item.unit}</span></td>
-                        <td><strong style={{ color: 'var(--ink)' }}>{s.item.name}</strong>{s.item.low && <div><span className="badge warn" style={{ fontSize: 11 }}>Stock bajo: {qty(s.item.stock)}</span></div>}</td>
+                        <td><strong style={{ color: 'var(--ink)' }}>{s.item.name}</strong>{s.item.warehouseName && <div style={{ fontSize: 11.5, color: 'var(--muted)' }}>De: {s.item.warehouseName}</div>}{s.item.low && <div><span className="badge warn" style={{ fontSize: 11 }}>Stock bajo: {qty(s.item.stock)}</span></div>}</td>
                         <td style={{ whiteSpace: 'normal' }}>{s.observation || <span style={{ color: 'var(--muted)' }}>—</span>}</td>
                         <td>{s.user || '—'}</td>
                         <td>{fmtTime(s.createdAt)}</td>

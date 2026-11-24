@@ -33,6 +33,7 @@ const ProductsPage = lazy(() => import('./pages/inventario/ProductsPage'))
 const InventorySheet = lazy(() => import('./pages/inventario/InventorySheet'))
 const IpsServicesPage = lazy(() => import('./pages/IpsServicesPage'))
 const WarehousesPage = lazy(() => import('./pages/inventario/WarehousesPage'))
+const KitsPage = lazy(() => import('./pages/inventario/KitsPage'))
 const MySignaturePage = lazy(() => import('./pages/SignaturePage').then((m) => ({ default: m.MySignaturePage })))
 const CytologyPage = lazy(() => import('./pages/CytologyPage'))
 const ServiceConfigPage = lazy(() => import('./pages/ServiceConfigPage'))
@@ -214,6 +215,7 @@ const App = () => (
             <Route path="socorro/inventario/existencias" element={<Protected module="inventario" roles={STAFF}><StockPage /></Protected>} />
             <Route path="socorro/inventario/movimientos" element={<Protected module="inventario" roles={STAFF}><MovementsPage /></Protected>} />
             <Route path="socorro/inventario/productos" element={<Protected module="inventario" roles={STAFF}><ProductsPage /></Protected>} />
+            <Route path="socorro/inventario/kits" element={<Protected module="inventario" roles={STAFF}><KitsPage /></Protected>} />
             <Route path="socorro/inventario/reporte" element={<Protected module="inventario" roles={STAFF}><InventorySheet /></Protected>} />
             <Route path="estandares" element={<Protected module={['talento_humano', 'procesos_prioritarios', 'interdependencia', 'medicamentos', 'infraestructura', 'historia_clinica']} roles={STAFF}><StandardsDashboard /></Protected>} />
             <Route path="estandares/listado" element={<Protected module={['talento_humano', 'procesos_prioritarios', 'interdependencia', 'medicamentos', 'infraestructura', 'historia_clinica']} roles={STAFF}><StandardsHome /></Protected>} />

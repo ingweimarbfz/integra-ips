@@ -2,6 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { MdArrowBack, MdFlag, MdDelete, MdErrorOutline, MdPrint } from 'react-icons/md'
 import api, { errorMessage } from '../../api/client'
+import useDirections from '../../hooks/useDirections'
 import { useAuth } from '../../context/AuthContext'
 import { useSettings } from '../../context/SettingsContext'
 import { Modal, Spinner, useToast } from '../../components/ui'
@@ -12,11 +13,47 @@ import '../../components/cytology.css'
 import { SignBlock, useDocSignatures } from '../../components/signature'
 import { DOC_TYPES, REGIMES, PRIORITIES, TRANSFER_TYPES, CONDITIONS, SEX } from './transfer'
 
+
+// IIPS-024 · Insumos gastados de la dotación de la ambulancia (se descuentan del stock de esa móvil).
+const TripSupplies = ({ t, onChange, toast }) => {
+  const [stock, setStock] = useState(null)
+  const [f, setF] = useState({ itemId: '', quantity: '', observation: '' })
+  const [saving, setSaving] = useState(false)
+  useEffect(() => { api.get(`/vehiculos-reportes/${t.id}/dotacion`, { noCache: true }).then(({ data }) => setStock(data)).catch(() => setStock({ warehouse: null, lines: [], canEdit: false })) }, [t.id, t.supplies.length])
+  const add = async () => {
+    if (!f.itemId || !(Number(f.quantity) > 0)) return toast('Elige el insumo y la cantidad', 'bad')
+    setSaving(true)
+    try { const { data } = await api.post(`/vehiculos-reportes/${t.id}/insumos`, { ...f, itemId: Number(f.itemId), quantity: Number(f.quantity) }); onChange(data); setF({ itemId: '', quantity: '', observation: '' }); toast('Insumo registrado y descontado de la dotación') } catch (e) { toast(errorMessage(e), 'bad') } finally { setSaving(false) }
+  }
+  const remove = async (sid) => { try { const { data } = await api.delete(`/vehiculos-reportes/${t.id}/insumos/${sid}`); onChange(data); toast('Consumo anulado') } catch (e) { toast(errorMessage(e), 'bad') } }
+  if (!stock) return null
+  if (!stock.warehouse && !t.supplies.length) return null
+  return (
+    <section className="cy-section ev-table-section">
+      <h3 className="cy-section-title">Insumos usados{stock.warehouse ? ` · ${stock.warehouse.name}` : ''}</h3>
+      {t.supplies.length ? (
+        <table className="ev-table"><thead><tr><th>Insumo</th><th>Lote</th><th>Cantidad</th><th>Observación</th>{stock.canEdit && <th className="no-print" />}</tr></thead>
+          <tbody>{t.supplies.map((x) => <tr key={x.id}><td>{x.item?.name}</td><td>{x.item?.lot || '—'}</td><td>{x.quantity} {x.item?.unit}</td><td>{x.observation || '—'}</td>{stock.canEdit && <td className="no-print"><button type="button" className="btn btn-ghost btn-icon" aria-label="Anular" style={{ color: 'var(--bad)' }} onClick={() => remove(x.id)}><MdDelete /></button></td>}</tr>)}</tbody>
+        </table>
+      ) : <p style={{ margin: 0, color: 'var(--muted)' }}>Sin insumos registrados.</p>}
+      {stock.canEdit && stock.warehouse && (
+        <div className="no-print" style={{ display: 'grid', gridTemplateColumns: 'minmax(0, 2fr) 90px minmax(0, 1.4fr) auto', gap: 8, marginTop: 10, alignItems: 'end' }}>
+          <div className="field"><label>Insumo</label><select value={f.itemId} onChange={(e) => setF({ ...f, itemId: e.target.value })}><option value="">Selecciona…</option>{stock.lines.filter((l) => !l.expired).map((l) => <option key={l.id} value={l.id}>{l.name}{l.lot ? ` · lote ${l.lot}` : ''} · hay {l.stock}</option>)}</select></div>
+          <div className="field"><label>Cantidad</label><input type="number" min="0" step="any" value={f.quantity} onChange={(e) => setF({ ...f, quantity: e.target.value })} /></div>
+          <div className="field"><label>Observación</label><input value={f.observation} onChange={(e) => setF({ ...f, observation: e.target.value })} placeholder="Opcional" /></div>
+          <button type="button" className="btn btn-primary" onClick={add} disabled={saving}>{saving ? <Spinner /> : 'Registrar'}</button>
+        </div>
+      )}
+    </section>
+  )
+}
+
 // Reporte diario del conductor: vista e impresión (PDF).
 const TripDetail = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
+  const dirs = useDirections()
   const { logo, settings } = useSettings()
   const [toast, toastNode] = useToast()
   const [t, setT] = useState(null)
@@ -135,9 +172,11 @@ const TripDetail = () => {
           </section>
         )}
 
+        <TripSupplies t={t} onChange={setT} toast={toast} />
+
         <section className="cy-signatures" style={{ gridTemplateColumns: '1fr 1fr' }}>
           <SignBlock doc={doc} slot="conductor" label="Conductor" name={t.driver.name} canSign={t.driver.id === user.id} />
-          <SignBlock doc={doc} slot="reviso" label="Revisó · Dirección de Socorro y Operaciones" canSign={user.role === 'administrador'} />
+          <SignBlock doc={doc} slot="reviso" label="Revisó · Dirección de Socorro y Operaciones" canSign={user.role === 'administrador' || dirs.directs('socorro_operaciones')} />
         </section>
 
         <footer className="cy-sheet-footer">

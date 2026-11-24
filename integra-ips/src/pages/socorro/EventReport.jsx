@@ -78,7 +78,7 @@ const EventReport = ({ event: e, onBack }) => {
                 {e.materials.map((m) => (
                   <tr key={m.id}>
                     <td><b>{qty(m.quantity)}</b></td><td>{m.item.name}</td><td><span className={`badge ${CATEGORY_TONE[m.item.category]}`}>{CATEGORY_LABELS[m.item.category]}</span></td>
-                    <td>{m.returned == null ? '—' : <span className={`badge ${m.returned === m.quantity ? 'ok' : 'bad'}`}>{qty(m.returned)} de {qty(m.quantity)}</span>}</td><td><span className={`badge ${STATE_TONE[m.state]}`}>{STATE_LABELS[m.state]}</span></td><td>{m.observation || '—'}</td>
+                    <td>{m.returned == null ? '—' : <span className={`badge ${m.returned === m.quantity ? 'ok' : 'bad'}`}>{qty(m.returned)} de {qty(m.quantity)}</span>}</td><td><span className={`badge ${STATE_TONE[m.state]}`}>{STATE_LABELS[m.state]}</span>{m.units?.filter((u) => u.state !== 'bueno').map((u) => <div key={u.id} style={{ fontSize: 11.5, marginTop: 3 }}><b>{u.label}</b>: {STATE_LABELS[u.state]}{u.observation ? ` · ${u.observation}` : ''}</div>)}</td><td>{m.observation || '—'}</td>
                   </tr>
                 ))}
               </tbody>

@@ -134,27 +134,37 @@ export const EntryModal = ({ products, generalName, onClose, onSaved }) => {
 
 // ---------------------------------------------------------------- Traslado entre bodegas (admin)
 // Desde la general a cualquier bodega, o entre bodegas de una misma sede. Nunca de regreso a la general.
-export const TransferModal = ({ warehouses, fromId, onClose, onSaved }) => {
+export const TransferModal = ({ warehouses, fromId, defaultTo, onClose, onSaved }) => {
   const general = warehouses.find((w) => w.isGeneral)
   const [from, setFrom] = useState(String(fromId || general?.id || ''))
   const source = warehouses.find((w) => String(w.id) === from)
   const targets = warehouses.filter((w) => w.active && !w.isGeneral && w.id !== source?.id && (source?.isGeneral || w.siteId === source?.siteId))
   const [to, setTo] = useState('')
+  const target = warehouses.find((w) => String(w.id) === to)
+  // IIPS-024: área o servicio de la sede de destino al que se cargan los elementos (no aplica a kits y ambulancias).
+  const [dest, setDest] = useState('')
+  const [dests, setDests] = useState([])
+  useEffect(() => {
+    setDest(''); setDests([])
+    if (target && (target.kind || 'bodega') === 'bodega') api.get('/inventario/catalogos', { params: { bodega: target.id, sede: undefined } }).then(({ data }) => setDests(data.destinations)).catch(() => {})
+  }, [to]) // eslint-disable-line react-hooks/exhaustive-deps
+  const needsDest = target && (target.kind || 'bodega') === 'bodega'
   const [lines, setLines] = useState(null)
   const [items, setItems] = useState([])
   const [note, setNote] = useState('Entrega semanal')
   const [error, setError] = useState(''); const [saving, setSaving] = useState(false)
   useEffect(() => {
-    setLines(null); setItems([]); setTo('')
+    setLines(null); setItems([]); setTo(defaultTo ? String(defaultTo) : '')
     if (from) api.get('/inventario/stock', { params: { bodega: from, sede: undefined } }).then(({ data }) => setLines(data)).catch((e) => setError(errorMessage(e)))
   }, [from])
   const submit = async () => {
     setError('')
     if (!to) return setError('Selecciona la bodega de destino.')
+    if (needsDest && !dest) return setError('Selecciona a qué área o servicio se carga.')
     const v = validLines(items); if (v) return setError(v)
     setSaving(true)
     try {
-      const { data } = await api.post('/inventario/traslados', { fromWarehouseId: Number(from), toWarehouseId: Number(to), note, items: items.map((x) => ({ itemId: x.itemId, quantity: Number(x.quantity) })) })
+      const { data } = await api.post('/inventario/traslados', { fromWarehouseId: Number(from), toWarehouseId: Number(to), destination: needsDest ? dest : undefined, note, items: items.map((x) => ({ itemId: x.itemId, quantity: Number(x.quantity) })) })
       onSaved(`Traslado ${data.ref} enviado a ${data.warehouseName}`)
     } catch (e) { setError(errorMessage(e)); setSaving(false) }
   }
@@ -164,8 +174,18 @@ export const TransferModal = ({ warehouses, fromId, onClose, onSaved }) => {
       <div className="stack" style={{ gap: 14 }}>
         <div className="form-grid" style={{ gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}>
           <div className="field"><label>Desde <span className="req">*</span></label><select value={from} onChange={(e) => setFrom(e.target.value)}>{warehouses.filter((w) => w.active).map((w) => <option key={w.id} value={w.id}>{w.name}{w.isGeneral ? ' (general)' : ` · ${w.siteName}`}</option>)}</select></div>
-          <div className="field"><label>Hacia <span className="req">*</span></label><select value={to} onChange={(e) => setTo(e.target.value)}><option value="">Selecciona la bodega…</option>{targets.map((w) => <option key={w.id} value={w.id}>{w.name} · {w.siteName}</option>)}</select>
+          <div className="field"><label>Hacia <span className="req">*</span></label><select value={to} onChange={(e) => setTo(e.target.value)}><option value="">Selecciona la bodega…</option>{targets.map((w) => <option key={w.id} value={w.id}>{w.kind && w.kind !== 'bodega' ? `${w.kindLabel}: ` : ''}{w.name} · {w.siteName}</option>)}</select>
             {source && !source.isGeneral && <span className="hint">Desde una bodega de unidad o grupo solo se traslada a otra bodega de la misma sede.</span>}</div>
+          {needsDest && (
+            <div className="field span-all"><label>Área o servicio al que se carga <span className="req">*</span></label>
+              <select value={dest} onChange={(e) => setDest(e.target.value)}>
+                <option value="">Selecciona…</option>
+                {dests.some((d) => d.group === 'ips') && <optgroup label="Servicios de IPS">{dests.filter((d) => d.group === 'ips').map((d) => <option key={d.key} value={d.key}>{d.label.replace('IPS · ', '')}</option>)}</optgroup>}
+                <optgroup label="Otras áreas">{dests.filter((d) => d.group !== 'ips').map((d) => <option key={d.key} value={d.key}>{d.label.replace('Operaciones Generales · ', '')}</option>)}</optgroup>
+              </select>
+              <span className="hint">Queda registrado en los movimientos para saber a qué área se cargó.</span>
+            </div>
+          )}
           <div className="field span-all"><label>Nota</label><input value={note} onChange={(e) => setNote(e.target.value)} /></div>
         </div>
         {!lines ? <div className="splash" style={{ minHeight: 100 }}><Spinner /></div> : <LinesPicker lines={lines} value={items} onChange={setItems} />}
