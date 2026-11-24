@@ -22,8 +22,9 @@ const VirtualClassroom = () => {
   if (!d) return <div className="splash" style={{ minHeight: 300 }}><Spinner /></div>
   const s = d.session
   const hash = [`userInfo.displayName="${encodeURIComponent(d.displayName)}"`, d.email ? `userInfo.email="${encodeURIComponent(d.email)}"` : null, 'config.prejoinConfig.enabled=false', `config.subject="${encodeURIComponent(`${s.subject || 'Clase'} · ${s.group?.code || ''}`)}"`].filter(Boolean).join('&')
-  const url = `https://${d.domain}/${d.room}#${hash}`
-  const publicJitsi = d.domain === 'meet.jit.si'
+  // JaaS (8x8): el token firmado por el servidor identifica a la persona y da moderador al docente.
+  const url = `https://${d.domain}/${d.room}${d.jwt ? `?jwt=${d.jwt}` : ''}#${hash}`
+  const publicJitsi = d.provider !== 'jaas' && d.domain === 'meet.jit.si'
   return (
     <div className="stack" style={{ gap: 12 }}>
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center', justifyContent: 'space-between' }}>
