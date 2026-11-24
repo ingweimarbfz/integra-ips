@@ -7,7 +7,7 @@ import { PageHead, Card, Modal, Empty, Spinner, useToast } from '../../component
 import { qty } from './common'
 
 const ORDER = { seccional: 0, unidad_municipal: 1, grupo_apoyo: 2 }
-const EMPTY = { name: '', siteId: '', responsible: '', location: '', description: '', active: true }
+const EMPTY = { name: '', siteId: '', responsible: '', location: '', description: '', active: true, kind: 'bodega', vehicleId: '' }
 
 const WarehouseForm = ({ initial, sites, onClose, onSaved }) => {
   const editing = Boolean(initial?.id)

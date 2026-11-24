@@ -172,7 +172,8 @@ const NAV = {
         { to: '/socorro/inventario', label: 'Dashboard de inventario', icon: MdInventory2, roles: STAFF, end: true, module: 'inventario' },
         { to: '/socorro/inventario/existencias', label: 'Existencias por bodega', icon: MdWarehouse, roles: STAFF, module: 'inventario' },
         { to: '/socorro/inventario/movimientos', label: 'Movimientos y entregas', icon: MdSwapHoriz, roles: STAFF, module: 'inventario' },
-        { to: '/socorro/inventario/productos', label: 'Catálogo de productos', icon: MdCategory, roles: STAFF, module: 'inventario' }
+        { to: '/socorro/inventario/productos', label: 'Catálogo de productos', icon: MdCategory, roles: STAFF, module: 'inventario' },
+        { to: '/socorro/inventario/kits', label: 'Kits, botiquines y ambulancias', icon: MdMedicalServices, roles: STAFF, module: 'inventario' }
       ]
     },
     {

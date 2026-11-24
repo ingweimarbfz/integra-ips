@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
 import { MdArrowBack, MdPrint, MdDelete, MdErrorOutline } from 'react-icons/md'
 import api, { errorMessage } from '../../api/client'
+import useDirections from '../../hooks/useDirections'
 import { useAuth } from '../../context/AuthContext'
 import { useSettings } from '../../context/SettingsContext'
 import { Modal, Spinner, useToast } from '../../components/ui'
@@ -15,6 +16,7 @@ const InspectionDetail = () => {
   const { id } = useParams()
   const navigate = useNavigate()
   const { user } = useAuth()
+  const dirs = useDirections()
   const { logo, settings } = useSettings()
   const [toast, toastNode] = useToast()
   const [r, setR] = useState(null)
@@ -100,7 +102,7 @@ const InspectionDetail = () => {
 
         <section className="cy-signatures" style={{ gridTemplateColumns: '1fr 1fr' }}>
           <SignBlock doc={doc} slot="conductor" label="Conductor" name={r.driver.name} canSign={r.driver.id === user.id} />
-          <SignBlock doc={doc} slot="reviso" label="Revisó · Administrador de flota" canSign={user.role === 'administrador'} />
+          <SignBlock doc={doc} slot="reviso" label="Revisó · Administrador de flota" canSign={user.role === 'administrador' || dirs.directs('socorro_operaciones')} />
         </section>
         <footer className="cy-sheet-footer"><span>{settings.ipsName} · Preoperacional {r.code}</span><span>Impreso el {printedAt}</span></footer>
       </article>
