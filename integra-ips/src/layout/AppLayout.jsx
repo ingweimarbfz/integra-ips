@@ -45,7 +45,7 @@ const ModuleSwitch = ({ current, user, variant }) => {
       {mods.map((m) => (
         <button key={m.id} type="button" role="tab" aria-selected={current === m.id} title={m.fullLabel}
           className={current === m.id ? 'on' : ''} onClick={() => { rememberModule(m.id); navigate(moduleHome(user, m.id)) }}>
-          <m.icon /> {m.label}
+          <m.icon /> {variant === 'bar' ? m.short || m.label : m.label}
           {current !== m.id && <Bubble n={sumRoutes(navForUser(user, m.id).flatMap((sec) => sec.items), countFor)} />}
         </button>
       ))}
@@ -299,7 +299,15 @@ const AppLayoutInner = () => {
             <AlertsBell />
             <UserMenu />
           </header>
-          {/* Escritorio: dónde está el usuario, en una franja fija bajo la barra superior. */}
+          {/* IIPS-033 · Escritorio: primero la fila de módulos (con las pestañas internas del módulo), y debajo solo la miga de pan. */}
+          <div className="topbar-modules">
+            <ModuleSwitch current={moduleId} user={user} variant="bar" />
+            {tabsVisible.length > 1 && (
+              <div className="module-tabs bar" role="tablist" aria-label="Sección del módulo">
+                {tabsVisible.map((t) => <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} className={tab === t.id ? 'on' : ''} onClick={() => navigate(t.first.to)}>{t.label}</button>)}
+              </div>
+            )}
+          </div>
           <nav className="topbar-crumbs" aria-label="Miga de pan">
             <Link to={moduleHome(user, moduleId)}>{currentModule.fullLabel}</Link>
             {section && section !== 'General' && (
@@ -310,15 +318,6 @@ const AppLayoutInner = () => {
             )}
             <MdChevronRight className="topbar-crumbs-sep" aria-hidden="true" />
             <strong aria-current="page">{title || settings.shortName}</strong>
-            {/* Escritorio: módulos y pestañas del módulo en línea, para dejar el menú lateral solo con sus ítems. */}
-            <div className="crumbs-tabs">
-              {tabsVisible.length > 1 && (
-                <div className="module-tabs bar" role="tablist" aria-label="Sección del módulo">
-                  {tabsVisible.map((t) => <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} className={tab === t.id ? 'on' : ''} onClick={() => navigate(t.first.to)}>{t.label}</button>)}
-                </div>
-              )}
-              <ModuleSwitch current={moduleId} user={user} variant="bar" />
-            </div>
           </nav>
         </div>
         <main className="content">
