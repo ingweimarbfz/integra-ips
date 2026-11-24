@@ -36,6 +36,8 @@ const WarehousesPage = lazy(() => import('./pages/inventario/WarehousesPage'))
 const KitsPage = lazy(() => import('./pages/inventario/KitsPage'))
 const VacationsPage = lazy(() => import('./pages/talento/Vacations').then((m) => ({ default: m.VacationsPage })))
 const MyCvPage = lazy(() => import('./pages/MyCvPage'))
+const Corr = (name) => lazy(() => import('./pages/correspondencia/Correspondence').then((m) => ({ default: m[name] })))
+const CorrDashboard = Corr('CorrDashboard'); const CorrNew = Corr('CorrNew'); const CorrRegister = Corr('CorrRegister'); const CorrInbox = Corr('CorrInbox'); const CorrDetail = Corr('CorrDetail'); const CorrAreas = Corr('CorrAreas')
 const VirtualClassroom = lazy(() => import('./pages/academico/VirtualClassroom'))
 const CertTemplatesPage = lazy(() => import('./pages/academico/CertTemplates'))
 const PatientsSearch = lazy(() => import('./pages/PatientsPage').then((m) => ({ default: m.PatientsSearch })))
@@ -259,6 +261,12 @@ const App = () => (
             <Route path="pacientes/:doc" element={<Protected module={['citologias', 'vacunacion', 'traslado']} roles={STAFF}><PatientDetail /></Protected>} />
             <Route path="educacion/aula-virtual/:id" element={<Protected roles={['administrador', 'empleado', 'docente', 'estudiante']}><VirtualClassroom /></Protected>} />
             <Route path="educacion/plantillas-certificado" element={<Protected roles={ADMIN}><CertTemplatesPage /></Protected>} />
+            <Route path="correspondencia" element={<Protected module="correspondencia" roles={STAFF}><CorrDashboard /></Protected>} />
+            <Route path="correspondencia/radicar" element={<Protected module="correspondencia" roles={STAFF}><CorrNew /></Protected>} />
+            <Route path="correspondencia/registro" element={<Protected module="correspondencia" roles={STAFF}><CorrRegister /></Protected>} />
+            <Route path="correspondencia/areas" element={<Protected roles={ADMIN}><CorrAreas /></Protected>} />
+            <Route path="correspondencia/bandeja" element={<Protected roles={['administrador', 'empleado', 'conductor', 'voluntario', 'docente']}><CorrInbox /></Protected>} />
+            <Route path="correspondencia/:id" element={<Protected roles={['administrador', 'empleado', 'conductor', 'voluntario', 'docente']}><CorrDetail /></Protected>} />
             <Route path="mi-hoja-de-vida" element={<Protected roles={['administrador', 'empleado', 'conductor', 'voluntario', 'docente']}><MyCvPage /></Protected>} />
             <Route path="estandares/talento-humano/instructivo" element={<Protected module="talento_humano" roles={STAFF}><ThGuide /></Protected>} />
             <Route path="estandares/talento-humano/configuracion" element={<Protected roles={ADMIN}><ThConfig /></Protected>} />

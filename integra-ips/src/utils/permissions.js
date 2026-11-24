@@ -2,7 +2,7 @@ import {
   MdDashboard, MdThermostat, MdNoteAdd, MdManageSearch, MdPeople, MdSettings, MdPerson,
   MdEmergency, MdInventory2, MdBadge, MdLocalHospital, MdLocalShipping, MdDirectionsCar, MdAssignment, MdSpeed,
   MdMedicalServices, MdAccountTree, MdVolunteerActivism, MdFactCheck, MdSchool, MdWarehouse, MdCategory, MdSwapHoriz, MdHealing, MdAirportShuttle, MdDraw, MdTune, MdInsights, MdGroups, MdRule, MdMenuBook, MdFolderShared, MdMedication, MdReceiptLong, MdStorefront, MdPriceChange, MdAccountBalance, MdVaccines, MdEventRepeat, MdNotificationsActive, MdClass, MdHowToReg, MdMenuBook as MdPensum, MdAccountBalanceWallet, MdHandshake, MdMeetingRoom as MdMeetingRoomIcon, MdWorkspacePremium as MdWorkspacePremiumIcon, MdCalendarMonth, MdGrading, MdRateReview, MdLibraryBooks
-  , MdBeachAccess, MdBusinessCenter, MdContactPage, MdPersonSearch
+  , MdBeachAccess, MdBusinessCenter, MdContactPage, MdPersonSearch, MdMarkunread, MdInbox, MdPostAdd, MdListAlt, MdDomain
 } from 'react-icons/md'
 
 export const ROLE_LABELS = {
@@ -53,14 +53,16 @@ export const USER_MODULES = {
   ips: [['ips_dashboard', 'Dashboard de IPS'], ['citologias', 'Citologías'], ['vacunacion', 'Vacunación (registro, carnet, seguimiento y ESAVI)'], ['facturacion', 'Facturación, EPS y cuentas de cobro'], ['traslado', 'Traslado asistencial (ambulancias)'], ['temperatura', 'Registro de temperatura'], ['equipos', 'Hoja de vida de equipos']],
   socorro: [['og_dashboard', 'Dashboard de Operaciones Generales'], ['socorro', 'Socorro (eventos y emergencias)'], ['educacion', 'Educación'], ['personas', 'Personas / voluntarios'], ['reporte_voluntarios', 'Reporte de voluntarios'], ['inventario', 'Inventario y bodegas'], ['flota', 'Flota vehicular'], ['voluntario', 'Panel de voluntario']],
   estandares: [['talento_humano', 'Talento humano (hojas de vida, contratos y chequeo)'], ['procesos_prioritarios', 'Procesos prioritarios (documentos)'], ['interdependencia', 'Interdependencia (carpeta y documentos)'], ['medicamentos', 'Medicamentos, dispositivos e insumos (documentos)'], ['infraestructura', 'Infraestructura (carpeta, seguimiento y documentos)'], ['historia_clinica', 'Historia clínica y registros (carpeta y documentos)'], ['doc_generales', 'Doc. Generales (documentos de calidad por ítem y carpeta)']],
+  documental: [['correspondencia', 'Gestión documental y correspondencia (radicar, registro y dashboard)']],
   talento: [['th_general', 'Talento humano de otras dependencias (administrativo, educación, conductores…)']],
   educacion: [['edu_dashboard', 'Dashboard del instituto (director o encargado)'], ['edu_programas', 'Programas, pensum y grupos'], ['edu_estudiantes', 'Estudiantes y matrículas'], ['edu_portal', 'Portal del estudiante'], ['edu_docente', 'Panel del docente']]
 }
-export const USER_MODULE_GROUPS = { ips: 'IPS', socorro: 'Operaciones Generales', estandares: 'Calidad IPS y Estándares', talento: 'Talento Humano (personal no IPS)', educacion: 'Educación (institución ETDH)' }
+export const USER_MODULE_GROUPS = { ips: 'IPS', socorro: 'Operaciones Generales', estandares: 'Calidad IPS y Estándares', talento: 'Talento Humano (personal no IPS)', documental: 'Gestión documental', educacion: 'Educación (institución ETDH)' }
 // El plan contratado limita los módulos de todos (también del administrador).
 // planModules ya descuenta los módulos que la organización apagó (p. ej. Facturación).
 const PLAN_ALIAS = { th_general: 'talento_humano' }
-export const inPlan = (user, m) => { const mods = user?.planModules !== undefined ? user.planModules : user?.plan?.modules; return !mods || mods.includes(m) || Boolean(PLAN_ALIAS[m] && mods.includes(PLAN_ALIAS[m])) }
+const PLAN_FREE = ['correspondencia']
+export const inPlan = (user, m) => { const mods = user?.planModules !== undefined ? user.planModules : user?.plan?.modules; return !mods || PLAN_FREE.includes(m) || mods.includes(m) || Boolean(PLAN_ALIAS[m] && mods.includes(PLAN_ALIAS[m])) }
 export const hasModule = (user, mod) => {
   if (!user) return false
   if (!mod) return true
@@ -86,6 +88,8 @@ export const MODULES = [
   { id: 'estandares', label: 'Calidad IPS y Estándares', fullLabel: 'Calidad IPS y Estándares', tabs: [{ id: 'estandares', label: 'Estándares' }, { id: 'docs', label: 'Doc. Generales', prefix: '/estandares/doc-generales' }], icon: MdRule, home: '/estandares', visible: (u) => ownItems('estandares', u).length > 0 },
   // IIPS-026 · Talento humano de otras dependencias (misma interfaz que la de IPS, filtrada por dependencia).
   { id: 'talento', label: 'Talento Humano', fullLabel: 'Talento Humano · otras dependencias', icon: MdBusinessCenter, home: '/talento-humano', visible: (u) => ownItems('talento', u).length > 0 },
+  // IIPS-030 · Gestión documental y correspondencia (ventanilla única).
+  { id: 'documental', label: 'Gestión documental', fullLabel: 'Gestión documental y correspondencia', icon: MdMarkunread, home: '/correspondencia', visible: (u) => ownItems('documental', u).length > 0 },
   // Académico ETDH (IIPS-019). Las "Actividades de educación" de Operaciones Generales son otra cosa (salidas fuera del aula).
   { id: 'educacion', label: 'Educación', fullLabel: 'Educación · Institución ETDH', icon: MdSchool, home: '/educacion', visible: (u) => ownItems('educacion', u).length > 0 }
 ]
@@ -103,7 +107,7 @@ export const homeFor = (user, preferred) => {
   return order.map(first).find(Boolean) || '/perfil'
 }
 
-export const moduleFromPath = (pathname) => (pathname.startsWith('/socorro') ? 'socorro' : pathname.startsWith('/estandares') ? 'estandares' : pathname.startsWith('/educacion') ? 'educacion' : pathname.startsWith('/talento-humano') ? 'talento' : 'ips')
+export const moduleFromPath = (pathname) => (pathname.startsWith('/socorro') ? 'socorro' : pathname.startsWith('/estandares') ? 'estandares' : pathname.startsWith('/educacion') ? 'educacion' : pathname.startsWith('/talento-humano') ? 'talento' : pathname.startsWith('/correspondencia') ? 'documental' : 'ips')
 
 const SHARED = [
   {
@@ -119,7 +123,7 @@ const SHARED = [
   },
   {
     title: 'Cuenta',
-    items: [{ to: '/perfil', label: 'Mi perfil', icon: MdPerson, roles: EVERYONE }, { to: '/mi-hoja-de-vida', label: 'Mi hoja de vida', icon: MdContactPage, roles: ['administrador', 'empleado', 'conductor', 'voluntario', 'docente'] }, { to: '/firma', label: 'Mi firma digital', icon: MdDraw, roles: EVERYONE }, { to: '/mis-notificaciones', label: 'Mis notificaciones', icon: MdNotificationsActive, roles: EVERYONE }]
+    items: [{ to: '/perfil', label: 'Mi perfil', icon: MdPerson, roles: EVERYONE }, { to: '/mi-hoja-de-vida', label: 'Mi hoja de vida', icon: MdContactPage, roles: ['administrador', 'empleado', 'conductor', 'voluntario', 'docente'] }, { to: '/firma', label: 'Mi firma digital', icon: MdDraw, roles: EVERYONE }, { to: '/correspondencia/bandeja', label: 'Mi correspondencia', icon: MdInbox, roles: ['administrador', 'empleado', 'conductor', 'voluntario', 'docente'] }, { to: '/mis-notificaciones', label: 'Mis notificaciones', icon: MdNotificationsActive, roles: EVERYONE }]
   }
 ]
 
@@ -242,6 +246,15 @@ const NAV = {
     ...SHARED
   ],
   // Educación · Institución ETDH (Decreto 1075 de 2015).
+  documental: [
+    { title: 'General', items: [
+      { to: '/correspondencia', label: 'Dashboard', icon: MdDashboard, roles: STAFF, end: true, module: 'correspondencia' },
+      { to: '/correspondencia/radicar', label: 'Radicar', icon: MdPostAdd, roles: STAFF, module: 'correspondencia' },
+      { to: '/correspondencia/registro', label: 'Registro de correspondencia', icon: MdListAlt, roles: STAFF, module: 'correspondencia' },
+      { to: '/correspondencia/areas', label: 'Áreas y consecutivos', icon: MdDomain, roles: ADMIN }
+    ] },
+    ...SHARED
+  ],
   talento: [
     { title: 'General', items: [
       { to: '/talento-humano', label: 'Dashboard (otras dependencias)', icon: MdDashboard, roles: STAFF, end: true, module: 'th_general' },
