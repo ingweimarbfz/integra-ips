@@ -34,6 +34,8 @@ const InventorySheet = lazy(() => import('./pages/inventario/InventorySheet'))
 const IpsServicesPage = lazy(() => import('./pages/IpsServicesPage'))
 const WarehousesPage = lazy(() => import('./pages/inventario/WarehousesPage'))
 const KitsPage = lazy(() => import('./pages/inventario/KitsPage'))
+const PlannedEventsPage = lazy(() => import('./pages/socorro/PlannedEvents').then((m) => ({ default: m.PlannedEventsPage })))
+const PlannedEventDetail = lazy(() => import('./pages/socorro/PlannedEvents').then((m) => ({ default: m.PlannedEventDetail })))
 const MySignaturePage = lazy(() => import('./pages/SignaturePage').then((m) => ({ default: m.MySignaturePage })))
 const CytologyPage = lazy(() => import('./pages/CytologyPage'))
 const ServiceConfigPage = lazy(() => import('./pages/ServiceConfigPage'))
@@ -205,6 +207,8 @@ const App = () => (
             <Route path="socorro/vehiculos/reportes" element={<Protected module="flota" grantable={false} roles={TRIPS}><TripsPage /></Protected>} />
             <Route path="socorro/vehiculos/reportes/:id" element={<Protected module="flota" grantable={false} roles={TRIPS}><TripDetail /></Protected>} />
             <Route path="socorro/voluntario" element={<Protected module="voluntario" grantable={false} roles={['administrador', 'empleado', 'voluntario']}><VolunteerPanel /></Protected>} />
+            <Route path="socorro/programacion" element={<Protected module={['socorro', 'educacion', 'flota']} roles={STAFF}><PlannedEventsPage /></Protected>} />
+            <Route path="socorro/programacion/:id" element={<Protected module={['socorro', 'educacion', 'flota']} roles={STAFF}><PlannedEventDetail /></Protected>} />
             <Route path="socorro/eventos" element={<Protected module="socorro" roles={EVENTS}><EventsPage area="socorro" key="socorro" /></Protected>} />
             <Route path="socorro/educacion" element={<Protected module="educacion" roles={EVENTS}><EventsPage area="educacion" key="educacion" /></Protected>} />
             <Route path="socorro/educacion/:id" element={<Protected module="educacion" roles={EVENTS}><EventDetail /></Protected>} />

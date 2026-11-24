@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { MdAdd, MdSearch, MdEmergency, MdSchool, MdErrorOutline, MdArrowForward, MdPlace, MdPeople, MdAccessTime } from 'react-icons/md'
 import api, { errorMessage } from '../../api/client'
 import { PageHead, Card, Modal, Empty, Spinner } from '../../components/ui'
@@ -14,11 +14,23 @@ export const AREA_INFO = {
 }
 export const eventPath = (e) => `${AREA_INFO[e.area || 'socorro'].base}/${e.id}`
 
-const NewEventModal = ({ onClose, area }) => {
+const NewEventModal = ({ onClose, area, plannedInitial }) => {
   const info = AREA_INFO[area]
   const navigate = useNavigate()
   const [form, setForm] = useState({ name: '', place: '', startedAt: '' })
   const [coordinator, setCoordinator] = useState(null)
+  // IIPS-025: cargar un evento programado (cotizado o aprobado) o crear uno desde cero.
+  const [planned, setPlanned] = useState([])
+  const [plannedId, setPlannedId] = useState('')
+  useEffect(() => { api.get('/eventos-previos', { params: { disponibles: 1, area }, noCache: true }).then(({ data }) => setPlanned(data)).catch(() => {}) }, [area])
+  const pick = (id) => {
+    setPlannedId(String(id || ''))
+    const p = planned.find((x) => String(x.id) === String(id))
+    if (!p) return
+    setForm((f) => ({ ...f, name: p.name, place: p.place || f.place }))
+    if (p.coordinator) setCoordinator(p.coordinator)
+  }
+  useEffect(() => { if (plannedInitial && planned.length) pick(plannedInitial) }, [plannedInitial, planned]) // eslint-disable-line react-hooks/exhaustive-deps
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
 
@@ -29,7 +41,7 @@ const NewEventModal = ({ onClose, area }) => {
     if (!coordinator) return setError('Busca y selecciona el coordinador por carnet o documento.')
     setSaving(true)
     try {
-      const { data } = await api.post('/socorro/eventos', { ...form, startedAt: form.startedAt || undefined, area, coordinatorId: coordinator.id })
+      const { data } = await api.post('/socorro/eventos', { ...form, startedAt: form.startedAt || undefined, area, coordinatorId: coordinator.id, plannedId: plannedId || undefined })
       navigate(eventPath(data))
     } catch (err) {
       setError(errorMessage(err))
@@ -44,9 +56,17 @@ const NewEventModal = ({ onClose, area }) => {
         <button type="submit" form="event-form" className="btn btn-primary" disabled={saving}>{saving ? <><Spinner /> Iniciando…</> : <>{area === 'educacion' ? <MdSchool /> : <MdEmergency />} Iniciar {area === 'educacion' ? 'actividad' : 'servicio'}</>}</button>
       </>}>
       <form id="event-form" onSubmit={submit} noValidate className="stack" style={{ gap: 16 }}>
+        {planned.length > 0 && (
+          <div className="field"><label>Evento programado</label>
+            <select value={plannedId} onChange={(e) => pick(e.target.value)}>
+              <option value="">Ninguno · crear desde cero</option>
+              {planned.map((p) => <option key={p.id} value={p.id}>{p.code} · {p.name} · {fmtDateTime(p.startsAt)}{p.client.name ? ` · ${p.client.name}` : ''}</option>)}
+            </select>
+            <span className="hint">Carga el nombre, el lugar y el coordinador; el programado queda como ejecutado.</span></div>
+        )}
         <div className="field"><label>{info.name} <span className="req">*</span></label><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder={info.placeholder} autoFocus maxLength={150} /></div>
         <div className="field"><label>Lugar <span className="req">*</span></label><input value={form.place} onChange={(e) => setForm({ ...form, place: e.target.value })} placeholder="Dirección o sitio" maxLength={150} /></div>
-        <PersonLookup label="Coordinador (carnet o documento) *" onFound={setCoordinator} />
+        {coordinator && plannedId ? <div className="picked-user"><span>Coordinador: <b>{coordinator.fullName}</b></span><button type="button" className="btn btn-ghost btn-sm" onClick={() => setCoordinator(null)}>Cambiar</button></div> : <PersonLookup label="Coordinador (carnet o documento) *" onFound={setCoordinator} />}
         <ManualDateTime value={form.startedAt} onChange={(v) => setForm({ ...form, startedAt: v })} label="Fecha y hora de inicio" />
         <div className="alert info"><MdAccessTime /><span>Solo el coordinador podrá agregar o modificar materiales e insumos. Una persona no puede estar en dos eventos en curso a la vez.</span></div>
         {error && <div className="alert bad"><MdErrorOutline /><span>{error}</span></div>}
@@ -60,7 +80,9 @@ const EventsPage = ({ area = 'socorro' }) => {
   const [filters, setFilters] = useState({ q: '', estado: '', desde: '', hasta: '' })
   const list = usePagedList('/socorro/eventos'); const rows = list.rows
   const [error, setError] = useState('')
-  const [creating, setCreating] = useState(false)
+  const [params, setParams] = useSearchParams()
+  const programado = params.get('programado')
+  const [creating, setCreating] = useState(Boolean(programado))
 
   const load = useCallback(async (f) => {
     setError('')
@@ -128,7 +150,7 @@ const EventsPage = ({ area = 'socorro' }) => {
         )}
         {rows && <LoadMore shown={rows.length} total={list.total} hasMore={list.hasMore} loading={list.loadingMore} onMore={() => list.more().catch((e) => setError(errorMessage(e)))} />}
       </Card>
-      {creating && <NewEventModal area={area} onClose={() => setCreating(false)} />}
+      {creating && <NewEventModal area={area} plannedInitial={programado} onClose={() => { setCreating(false); if (programado) setParams({}) }} />}
     </>
   )
 }

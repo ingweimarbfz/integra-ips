@@ -7,17 +7,24 @@ import { PageHead, Card, Modal, Empty, Spinner } from '../../components/ui'
 import ManualDateTime, { toLocalInput } from '../../components/ManualDateTime'
 import { VehicleLookup, PhotoField, km, money } from './common'
 import { fmtDateTime, duration } from '../socorro/common'
-import { TransferFields, EMPTY_TRANSFER, missingTransfer } from './transfer'
+import { TransferFields, EMPTY_TRANSFER, missingTransfer, CrewFields, crewPayload, UserPicker } from './transfer'
 
 // ---------------------------------------------------------------- Iniciar actividad
-// Solo el conductor abre reportes diarios (el administrador los consulta).
-const NewTripModal = ({ onClose }) => {
+// El conductor abre su reporte diario; el administrador también puede abrirlo indicando el conductor.
+// transferOnly: desde Traslado asistencial, para crear directamente un traslado TAB/TAM.
+export const NewTripModal = ({ onClose, transferOnly = false, plannedInitial }) => {
   const { user } = useAuth()
+  const admin = user.role === 'administrador'
   const navigate = useNavigate()
   const [vehicle, setVehicle] = useState(null)
   const [acts, setActs] = useState([])
-  const [f, setF] = useState({ mode: 'previa', eventId: '', activity: '', observation: '', startedAt: '' })
-  const [isTransfer, setIsTransfer] = useState(false)
+  const [f, setF] = useState({ mode: transferOnly ? 'nueva' : 'previa', eventId: '', activity: '', observation: '', startedAt: '' })
+  // IIPS-025: conductor (si abre el administrador), tripulación y evento programado de origen.
+  const [driver, setDriver] = useState(null)
+  const [crew, setCrew] = useState({ auxiliar: null, medico: null })
+  const [planned, setPlanned] = useState([]); const [plannedId, setPlannedId] = useState(plannedInitial ? String(plannedInitial) : '')
+  useEffect(() => { api.get('/eventos-previos', { params: { disponibles: 1, area: 'traslado' } }).then(({ data }) => setPlanned(data)).catch(() => {}) }, [])
+  const [isTransfer, setIsTransfer] = useState(transferOnly)
   const [transfer, setTransfer] = useState(EMPTY_TRANSFER)
   const transferOn = Boolean(vehicle?.isAmbulance) && f.mode === 'nueva' && isTransfer
   const [error, setError] = useState('')
@@ -29,15 +36,15 @@ const NewTripModal = ({ onClose }) => {
     api.get('/vehiculos/actividades', { params: vehicle ? { vehiculoSede: vehicle.siteId } : {} }).then(({ data }) => setActs(data)).catch(() => {})
   }, [vehicle])
   useEffect(() => {
-    api.get('/vehiculos-reportes', { params: { estado: 'abierto' } }).then(({ data }) => setMyOpen(data[0] || null)).catch(() => {})
-  }, [])
+    if (!admin) api.get('/vehiculos-reportes', { params: { estado: 'abierto' } }).then(({ data }) => setMyOpen(data[0] || null)).catch(() => {})
+  }, [admin])
   // Preoperacional de hoy del vehículo (y del conductor, si es él quien abre el reporte).
   const [pre, setPre] = useState(undefined)
   useEffect(() => {
     setPre(undefined)
     if (!vehicle) return
-    api.get('/vehiculos-preoperacional/hoy', { params: { vehiculo: vehicle.id, conductor: user.id } }).then(({ data }) => setPre(data)).catch(() => setPre(null))
-  }, [vehicle, user.id])
+    api.get('/vehiculos-preoperacional/hoy', { params: { vehiculo: vehicle.id, conductor: admin ? driver?.id : user.id } }).then(({ data }) => setPre(data)).catch(() => setPre(null))
+  }, [vehicle, user.id, admin, driver])
   const busyDriver = myOpen ? { code: myOpen.code, movil: myOpen.vehicle.movil } : null
 
   const submit = async () => {
@@ -47,6 +54,9 @@ const NewTripModal = ({ onClose }) => {
     if (vehicle.blockers?.length) return setError(`No se puede registrar el servicio: ${vehicle.blockers.join('. ')}.`)
     if (busyDriver) return setError(`Ya tienes la Móvil ${busyDriver.movil} en actividad (${busyDriver.code}). Debe cerrarla primero.`)
     if (f.mode === 'previa' && !f.eventId) return setError('Selecciona la actividad o servicio.')
+    if (admin && !driver) return setError('Selecciona el conductor que lleva la móvil.')
+    if (transferOn && !crew.auxiliar) return setError(`El traslado ${vehicle.ambulanceType} requiere auxiliar de traslado.`)
+    if (transferOn && vehicle.ambulanceType === 'TAM' && !crew.medico) return setError('El traslado TAM requiere médico.')
     if (transferOn) {
       const miss = missingTransfer(transfer)
       if (miss.length) return setError(`Completa los datos del traslado: ${miss.join(', ')}.`)
@@ -56,14 +66,15 @@ const NewTripModal = ({ onClose }) => {
       const { data } = await api.post('/vehiculos-reportes', {
         vehicleId: vehicle.id, observation: f.observation, startedAt: f.startedAt || undefined,
         eventId: f.mode === 'previa' ? f.eventId : undefined, activity: f.mode === 'nueva' ? f.activity : undefined,
-        transfer: transferOn ? transfer : undefined
+        transfer: transferOn ? transfer : undefined,
+        crew: transferOn || f.mode === 'previa' ? crewPayload(crew) : [], driverId: admin ? driver?.id : undefined, plannedId: plannedId || undefined
       })
       navigate(`/socorro/vehiculos/reportes/${data.id}`)
     } catch (e) { setError(errorMessage(e)); setSaving(false) }
   }
 
   return (
-    <Modal title="Nuevo reporte diario" size={transferOn ? 'lg' : ''} onClose={onClose}
+    <Modal title={transferOnly ? 'Nuevo traslado asistencial' : 'Nuevo reporte diario'} size={transferOn ? 'lg' : ''} onClose={onClose}
       footer={<><button type="button" className="btn btn-outline" onClick={onClose}>Cancelar</button><button type="button" className="btn btn-primary" onClick={submit} disabled={saving || !!busyDriver || !!vehicle?.blockers?.length}>{saving ? <Spinner /> : <MdPlayArrow />} Iniciar actividad</button></>}>
       <div className="stack" style={{ gap: 16 }}>
         <VehicleLookup onFound={setVehicle} autoFocus />
@@ -73,11 +84,21 @@ const NewTripModal = ({ onClose }) => {
             <div className="field"><label>Km de salida</label><input value={km(vehicle.currentKm)} readOnly /><span className="hint">Se toma del último km reportado</span></div>
           </div>
         )}
-        <div className="field"><label>Conductor</label>
-          <input value={user.fullName} readOnly />
-          {busyDriver && <span className="error">Ya tienes la Móvil {busyDriver.movil} en actividad ({busyDriver.code}). Debe cerrarla antes de tomar otro vehículo.</span>}
-        </div>
-        <div className="field">
+        {admin ? <UserPicker label="Conductor" required rol="conductor" value={driver} onChange={setDriver} /> : (
+          <div className="field"><label>Conductor</label>
+            <input value={user.fullName} readOnly />
+            {busyDriver && <span className="error">Ya tienes la Móvil {busyDriver.movil} en actividad ({busyDriver.code}). Debe cerrarla antes de tomar otro vehículo.</span>}
+          </div>
+        )}
+        {transferOnly && vehicle && !vehicle.isAmbulance && <div className="alert warn"><MdFlag /><span>La Móvil {vehicle.movil} no es una ambulancia TAB o TAM.</span></div>}
+        {transferOnly && planned.length > 0 && (
+          <div className="field"><label>Traslado programado (opcional)</label>
+            <select value={plannedId} onChange={(e) => setPlannedId(e.target.value)}>
+              <option value="">Ninguno · traslado nuevo</option>
+              {planned.map((p) => <option key={p.id} value={p.id}>{p.code} · {p.name}{p.client.name ? ` · ${p.client.name}` : ''}</option>)}
+            </select></div>
+        )}
+        <div className="field" style={transferOnly ? { display: 'none' } : undefined}>
           <label>Actividad o servicio</label>
           <div className="module-switch" style={{ marginBottom: 8 }}>
             <button type="button" className={f.mode === 'previa' ? 'on' : ''} onClick={() => setF({ ...f, mode: 'previa' })}>Servicio existente</button>
@@ -105,6 +126,12 @@ const NewTripModal = ({ onClose }) => {
             </>
           )}
         </div>
+        {vehicle && (transferOn || (f.mode === 'previa' && f.eventId)) && (
+          <div className="field"><label>Tripulación {transferOn ? `(${vehicle.ambulanceType === 'TAM' ? 'TAM: auxiliar y médico' : 'TAB: auxiliar de traslado'})` : '(opcional)'}</label>
+            <CrewFields value={crew} onChange={setCrew} type={transferOn ? vehicle.ambulanceType : null} optional={!transferOn} />
+          </div>
+        )}
+        {transferOnly && vehicle?.isAmbulance && <TransferFields value={transfer} onChange={setTransfer} />}
         {vehicle && pre === null && <div className="alert warn"><MdFlag /><span>No hay preoperacional de hoy para la Móvil {vehicle.movil}. Regístralo antes de salir: <Link to="/socorro/vehiculos/preoperacional/nuevo">hacer preoperacional</Link>.</span></div>}
         {vehicle?.blockers?.length > 0 && (
           <div className="alert bad"><MdFlag /><div><strong>No se puede registrar servicios con la Móvil {vehicle.movil}</strong>{vehicle.blockers.map((b) => <div key={b}>• {b}</div>)}</div></div>
@@ -205,7 +232,7 @@ const TripsPage = () => {
   return (
     <>
       <PageHead title="Reportes diarios" subtitle={admin ? 'Actividades de todos los conductores' : 'Tus actividades y servicios con la móvil'}>
-        {!admin && <button type="button" className="btn btn-primary" onClick={() => setCreating(true)}><MdAdd /> Nuevo reporte</button>}
+        <button type="button" className="btn btn-primary" onClick={() => setCreating(true)}><MdAdd /> Nuevo reporte</button>
       </PageHead>
 
       {open.length > 0 && (
