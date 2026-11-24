@@ -1023,3 +1023,4 @@ a.th-std:hover { box-shadow: var(--shadow-lg, 0 6px 18px rgba(0,0,0,.08)); }
 /* La campana va a la derecha, junto al usuario. */
 @media screen and (min-width: 1025px) { .topbar .alerts-bell { order: 5; } .topbar .user-menu { order: 6; } }
 @media (max-width: 1024px) { .topbar .alerts-bell { margin-left: auto; } .alerts-panel { right: 12px; left: 12px; width: auto; } }
+.dropdown-note { display: flex; flex-direction: column; gap: 2px; padding: 8px 12px; margin-bottom: 4px; border-bottom: 1px solid var(--line-2); font-size: 11.5px; font-weight: 600; color: var(--brand); }
