@@ -1048,3 +1048,20 @@ a.th-std:hover { box-shadow: var(--shadow-lg, 0 6px 18px rgba(0,0,0,.08)); }
 .field select, select.input { appearance: none; -webkit-appearance: none; padding-right: 30px;
   background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%236B7280' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
   background-repeat: no-repeat; background-position: right 10px center; }
+
+/* IIPS-032 · Selector de módulo compacto del menú lateral (celular y tableta). */
+.module-menu { position: relative; }
+.module-menu-current { display: flex; align-items: center; gap: 10px; width: 100%; padding: 8px 12px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); cursor: pointer; font-family: inherit; text-align: left; color: var(--brand); }
+.module-menu-current > svg:first-child { font-size: 20px; flex: 0 0 auto; }
+.module-menu-label { display: flex; flex-direction: column; min-width: 0; flex: 1; font-size: 13.5px; font-weight: 700; line-height: 1.25; color: var(--ink); }
+.module-menu-label small { font-size: 10.5px; font-weight: 600; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
+.module-menu-chevron { flex: 0 0 auto; color: var(--muted); transition: transform .15s; }
+.module-menu.open .module-menu-chevron { transform: rotate(180deg); }
+.module-menu-list { display: flex; flex-direction: column; margin-top: 6px; padding: 4px; border: 1px solid var(--line); border-radius: 12px; background: var(--surface); box-shadow: var(--shadow); }
+.module-menu-list button { display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 10px; border: 0; border-radius: 8px; background: transparent; cursor: pointer; font-family: inherit; font-size: 13.5px; font-weight: 600; color: var(--ink-2, var(--ink)); text-align: left; }
+.module-menu-list button:hover { background: var(--line-2); }
+.module-menu-list button > svg { font-size: 18px; color: var(--muted); flex: 0 0 auto; }
+.module-menu-list button > span:not(.nav-bubble) { flex: 1; min-width: 0; }
+/* Mi cuenta como sección desplegable al pie. */
+.sidebar-account.collapsible { gap: 2px; }
+.sidebar-account .nav-section-toggle { padding-left: 4px; padding-right: 4px; }

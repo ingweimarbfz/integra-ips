@@ -53,6 +53,38 @@ const ModuleSwitch = ({ current, user, variant }) => {
   )
 }
 
+// IIPS-032 · Menú lateral (celular y tableta): el módulo actual en un solo botón que despliega los demás,
+// en lugar de la lista de botones apilados que ocupaba medio menú.
+const ModuleMenu = ({ current, user }) => {
+  const navigate = useNavigate()
+  const { countFor } = useAlerts()
+  const [open, setOpen] = useState(false)
+  const mods = modulesForUser(user)
+  if (mods.length < 2) return null
+  const cur = mods.find((m) => m.id === current) || mods[0]
+  const others = mods.filter((m) => m.id !== cur.id)
+  const count = (m) => sumRoutes(navForUser(user, m.id).flatMap((sec) => sec.items), countFor)
+  const pending = others.reduce((a, m) => a + count(m), 0)
+  return (
+    <div className={`module-menu${open ? ' open' : ''}`}>
+      <button type="button" className="module-menu-current" aria-expanded={open} onClick={() => setOpen((o) => !o)}>
+        <cur.icon /><span className="module-menu-label" title={cur.fullLabel}><small>Módulo</small>{cur.label}</span>
+        {!open && <Bubble n={pending} />}
+        <MdKeyboardArrowDown className="module-menu-chevron" />
+      </button>
+      {open && (
+        <div className="module-menu-list" role="menu">
+          {others.map((m) => (
+            <button key={m.id} type="button" role="menuitem" onClick={() => { setOpen(false); rememberModule(m.id); navigate(moduleHome(user, m.id)) }}>
+              <m.icon /><span>{m.label}</span><Bubble n={count(m)} />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 // Fecha corta: "Mié, 11 Nov 2026" (mes con tres letras).
 const todayLabel = (() => {
   const parts = Object.fromEntries(new Intl.DateTimeFormat('es-CO', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric', timeZone: 'America/Bogota' }).formatToParts(new Date()).map((p) => [p.type, p.value]))
@@ -173,6 +205,12 @@ const AppLayoutInner = () => {
   useEffect(() => { if (activeSection && activeSection !== 'General') setOpenSection(activeSection) }, [activeSection, moduleId])
   useEffect(() => { try { if (openSection) localStorage.setItem(navKey, openSection); else localStorage.removeItem(navKey) } catch { /* sin almacenamiento */ } }, [openSection, navKey])
   const toggleSection = (title) => setOpenSection((cur) => (cur === title ? null : title))
+  // Mi cuenta: cerrada por defecto (se recuerda); se abre sola si la página actual es de la cuenta.
+  const accountItems = sections.find((s) => s.title === 'Cuenta')?.items || []
+  const accountActive = accountItems.some((i) => pathname.startsWith(i.to))
+  const [accountOpen, setAccountOpen] = useState(() => { try { return localStorage.getItem('cv:nav-account') === '1' } catch { return false } })
+  useEffect(() => { if (accountActive) setAccountOpen(true) }, [accountActive])
+  useEffect(() => { try { localStorage.setItem('cv:nav-account', accountOpen ? '1' : '0') } catch { /* sin almacenamiento */ } }, [accountOpen])
 
   return (
     <div className={`app${collapsed ? ' sidebar-off' : ''}`}>
@@ -185,8 +223,7 @@ const AppLayoutInner = () => {
           {siteControl}
         </div>
         <div className="module-wrap side-only">
-          <ModuleSwitch current={moduleId} user={user} />
-          <span className="module-name">{currentModule.fullLabel}</span>
+          <ModuleMenu current={moduleId} user={user} />
         </div>
         {tabsVisible.length > 1 && (
           <div className="module-tabs side-only" role="tablist" aria-label="Sección del módulo">
@@ -218,9 +255,14 @@ const AppLayoutInner = () => {
           })}
         </nav>
         <div className="sidebar-footer">
-          {/* Cuenta: fuera del menú, siempre al pie, encima del usuario. */}
-          <nav className="sidebar-account" aria-label="Cuenta">
-            {(sections.find((s) => s.title === 'Cuenta')?.items || []).map((i) => (
+          {/* Cuenta: un solo desplegable al pie (Mi perfil, Mi hoja de vida, Mi firma, Mi correspondencia…). */}
+          <nav className={`sidebar-account nav-section collapsible${accountOpen ? ' is-open' : ''}${accountActive ? ' has-active' : ''}`} aria-label="Mi cuenta">
+            <button type="button" className="nav-section-title nav-section-toggle" aria-expanded={accountOpen} onClick={() => setAccountOpen((o) => !o)}>
+              <span>Mi cuenta</span>
+              {!accountOpen && <Bubble n={sumRoutes(accountItems, countFor)} />}
+              <MdKeyboardArrowDown className="nav-section-chevron" />
+            </button>
+            {accountOpen && accountItems.map((i) => (
               <NavLink key={i.to} to={i.to} end={i.end} className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>
                 <i.icon /> {i.label}<Bubble n={countFor(i.to)} />
               </NavLink>
