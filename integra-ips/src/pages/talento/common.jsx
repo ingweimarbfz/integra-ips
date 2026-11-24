@@ -50,3 +50,14 @@ export const useCatalogs = (refresh = 0) => {
   return data
 }
 export const resetCatalogs = () => { cache = null }
+
+// ---------------------------------------------------------------- IIPS-026 · Ámbito de talento humano
+// Las mismas pantallas sirven al personal de IPS (/estandares/talento-humano) y al de otras
+// dependencias (/talento-humano). El ámbito sale de la ruta: no hay formularios ni reportes duplicados.
+export const thBase = () => (typeof window !== 'undefined' && window.location.pathname.startsWith('/talento-humano') ? '/talento-humano' : '/estandares/talento-humano')
+export const thScope = () => {
+  const p = typeof window !== 'undefined' ? window.location.pathname : ''
+  if (p.startsWith('/talento-humano/todo-el-personal')) return 'todos'
+  return p.startsWith('/talento-humano') ? 'general' : 'ips'
+}
+export const THSCOPE_LABEL = { ips: 'Personal de IPS', general: 'Otras dependencias', todos: 'Todo el personal contratado' }

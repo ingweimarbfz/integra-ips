@@ -10,7 +10,8 @@ import { useAuth } from '../../context/AuthContext'
 import { Card, Modal, Empty, Spinner, useToast } from '../../components/ui'
 import StaffForm from './StaffForm'
 import StaffSheet from './StaffSheet'
-import { CONTRACT_STATUS, CHECK_VALUES, DOC_TYPE_LABELS, SEX, StatusBadge, Percent, fmt, today, readAsDataUrl, checkFile, useCatalogs } from './common'
+import { VacationCard } from './Vacations'
+import { CONTRACT_STATUS, CHECK_VALUES, DOC_TYPE_LABELS, SEX, StatusBadge, Percent, fmt, today, readAsDataUrl, checkFile, useCatalogs, thBase, thScope, THSCOPE_LABEL } from './common'
 
 // ---------------------------------------------------------------- Soporte / certificado
 const DocForm = ({ staff, initial, preset, onClose, onSaved }) => {
@@ -199,7 +200,7 @@ const StaffDetail = () => {
 
   return (
     <>
-      <div style={{ marginBottom: 14 }}><Link to="/estandares/talento-humano/personal" className="btn btn-ghost btn-sm"><MdArrowBack /> Hojas de vida</Link></div>
+      <div style={{ marginBottom: 14 }}><Link to={`${thBase()}/personal`} className="btn btn-ghost btn-sm"><MdArrowBack /> Hojas de vida</Link></div>
       <section className="card ev-hero">
         <div className="ev-hero-top">
           <div style={{ display: 'flex', gap: 16, alignItems: 'center', minWidth: 0 }}>
@@ -310,6 +311,7 @@ const StaffDetail = () => {
         </Card>
       </div>
 
+      <div style={{ marginTop: 18 }}><VacationCard staffId={s.id} key={`vac-${s.contracts.length}`} /></div>
       <div className="grid grid-2" style={{ marginTop: 18, alignItems: 'start' }}>
         <Card flush title="Contratos" icon={<MdWork style={{ color: 'var(--brand)' }} />} actions={<button type="button" className="btn btn-outline btn-sm" onClick={() => setModal({ contract: {} })}><MdAdd /> Contrato</button>}>
           {s.contracts.length === 0 ? <Empty icon={<MdWork />}>Sin contratos registrados.</Empty> : (
@@ -329,7 +331,7 @@ const StaffDetail = () => {
             <ul className="list" style={{ padding: '4px 20px 8px' }}>{s.checklists.map((k) => (
               <li key={k.id}>
                 <div className="grow"><strong>{k.code} <span className={`badge ${k.result === 'cumple' ? 'ok' : 'bad'}`}>{k.result === 'cumple' ? 'Cumple' : 'No cumple'}</span></strong><span>{fmt(k.date)} · {k.compliant}/{k.total} ítems · {k.reviewer || '—'}</span></div>
-                <Link className="btn btn-ghost btn-sm" to={`/estandares/talento-humano/chequeo/${k.id}`}><MdPrint /> Ver / firmar</Link>
+                <Link className="btn btn-ghost btn-sm" to={`${thBase()}/chequeo/${k.id}`}><MdPrint /> Ver / firmar</Link>
               </li>
             ))}</ul>
           )}
@@ -339,10 +341,10 @@ const StaffDetail = () => {
       {modal?.edit && <StaffForm initial={s} onClose={() => setModal(null)} onSaved={done('Hoja de vida actualizada')} />}
       {modal?.doc && <DocForm staff={s} initial={modal.doc.id ? modal.doc : null} preset={modal.preset} onClose={() => setModal(null)} onSaved={done('Soporte guardado')} />}
       {modal?.contract && <ContractForm staff={s} initial={modal.contract.id ? modal.contract : null} onClose={() => setModal(null)} onSaved={done('Contrato guardado')} />}
-      {modal?.check && <ChecklistForm staff={s} onClose={() => setModal(null)} onSaved={(d) => navigate(`/estandares/talento-humano/chequeo/${d.id}`)} />}
+      {modal?.check && <ChecklistForm staff={s} onClose={() => setModal(null)} onSaved={(d) => navigate(`${thBase()}/chequeo/${d.id}`)} />}
       {modal?.delDoc && <Confirm title="Eliminar soporte" onClose={() => setModal(null)} onOk={() => act(() => api.delete(`/estandares/th/personal/${s.id}/documentos/${modal.delDoc.id}`), 'Soporte eliminado')}>¿Eliminar <b>{modal.delDoc.name}</b> y su archivo? No se puede deshacer.</Confirm>}
       {modal?.delContract && <Confirm title="Eliminar contrato" onClose={() => setModal(null)} onOk={() => act(() => api.delete(`/estandares/th/personal/${s.id}/contratos/${modal.delContract.id}`), 'Contrato eliminado')}>¿Eliminar el contrato {modal.delContract.contractTypeLabel} del {fmt(modal.delContract.startDate)}?</Confirm>}
-      {modal?.del && <Confirm title="Eliminar hoja de vida" onClose={() => setModal(null)} onOk={async () => { try { await api.delete(`/estandares/th/personal/${s.id}`); navigate('/estandares/talento-humano/personal') } catch (e) { toast(errorMessage(e), 'bad'); setModal(null) } }}>
+      {modal?.del && <Confirm title="Eliminar hoja de vida" onClose={() => setModal(null)} onOk={async () => { try { await api.delete(`/estandares/th/personal/${s.id}`); navigate(`${thBase()}/personal`) } catch (e) { toast(errorMessage(e), 'bad'); setModal(null) } }}>
         ¿Eliminar la hoja de vida de <b>{s.fullName}</b> con todos sus soportes, contratos y listas de chequeo? Si la persona se retiró, mejor márcala como inactiva para conservar el historial.</Confirm>}
       {toastNode}
     </>

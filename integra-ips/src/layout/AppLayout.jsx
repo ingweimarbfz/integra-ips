@@ -128,7 +128,7 @@ const AppLayoutInner = () => {
     setCollapsed((c) => { try { localStorage.setItem('cv_sidebar', c ? 'on' : 'off') } catch { /* sin almacenamiento */ } return !c })
   }
   // Perfil, usuarios y configuración son compartidos: conservan el módulo en el que se estaba.
-  const shared = ['/perfil', '/firma', '/mis-notificaciones', '/usuarios', '/configuracion', '/legal'].some((p) => pathname.startsWith(p))
+  const shared = ['/perfil', '/firma', '/mis-notificaciones', '/mi-hoja-de-vida', '/usuarios', '/configuracion', '/legal'].some((p) => pathname.startsWith(p))
   const [moduleId, setModuleId] = useState(() => {
     if (!shared) return moduleFromPath(pathname)
     const own = modulesForUser(user).map((m) => m.id)

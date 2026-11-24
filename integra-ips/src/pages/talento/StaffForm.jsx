@@ -4,14 +4,14 @@ import api, { errorMessage, getSiteFilter } from '../../api/client'
 import { useAuth } from '../../context/AuthContext'
 import { Modal, Spinner } from '../../components/ui'
 import { resizeImage } from '../../utils/image'
-import { DOC_TYPE_LABELS, SEX, BLOOD, today, useCatalogs } from './common'
+import { DOC_TYPE_LABELS, SEX, BLOOD, today, useCatalogs, thScope } from './common'
 import { sanitize, check } from '../../utils/validate'
 
 const EMPTY = {
   documentType: 'CC', document: '', firstName: '', lastName: '', birthDate: '', sex: '', bloodType: '', phone: '', email: '', address: '', city: '',
   profession: '', professionalCard: '', rethus: '', positionId: '', eps: '', arl: '', pensionFund: '', severanceFund: '',
   emergencyContact: '', emergencyPhone: '', notes: '', status: 'activo', siteId: '',
-  specialty: '', assignedService: '', hireDate: '', educationLevel: '', degreeTitle: '', institution: '', graduationYear: '', rethusVerifiedAt: ''
+  specialty: '', assignedService: '', hireDate: '', educationLevel: '', degreeTitle: '', institution: '', graduationYear: '', rethusVerifiedAt: '', dependencyId: ''
 }
 
 // Formulario de hoja de vida: datos personales, profesionales, de seguridad social y de contacto.
@@ -20,6 +20,8 @@ const StaffForm = ({ initial, onClose, onSaved }) => {
   const { user } = useAuth()
   const admin = user.role === 'administrador'
   const cat = useCatalogs()
+  // IIPS-026: en Talento Humano (otras dependencias) cada persona pertenece a una dependencia; en IPS no lleva.
+  const general = editing ? Boolean(initial.dependencyId) : thScope() !== 'ips'
   const [sites, setSites] = useState([])
   const [f, setF] = useState(() => {
     if (!editing) return { ...EMPTY, siteId: admin ? String(getSiteFilter() || '') : '' }
@@ -39,6 +41,7 @@ const StaffForm = ({ initial, onClose, onSaved }) => {
     e.preventDefault(); setError('')
     if (!f.document.trim() || !f.firstName.trim() || !f.lastName.trim()) return setError('Documento, nombres y apellidos son requeridos.')
     if (admin && !editing && !f.siteId) return setError('Selecciona la sede.')
+    if (general && !f.dependencyId) return setError('Selecciona la dependencia.')
     const bad = [['N° de documento', check.doc(f.document, f.documentType || 'CC')], ['Teléfono', check.phone(f.phone)], ['Teléfono del contacto de emergencia', check.phone(f.emergencyPhone)], ['Correo', check.email(f.email)]].find(([, m]) => m)
     if (bad) return setError(`${bad[0]}: ${bad[1]}.`)
     setSaving(true)
@@ -82,6 +85,7 @@ const StaffForm = ({ initial, onClose, onSaved }) => {
         <div><span className="label">Vinculación</span>
           <div className="form-grid" style={{ marginTop: 8 }}>
             {admin && <div className="field"><label>Sede <span className="req">*</span></label><select value={f.siteId} onChange={set('siteId')}><option value="">Selecciona…</option>{sites.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}</select></div>}
+            {general && <div className="field"><label>Dependencia <span className="req">*</span></label><select value={f.dependencyId} onChange={set('dependencyId')}><option value="">Selecciona…</option>{(cat?.dependencies || []).filter((d) => d.active || String(d.id) === String(f.dependencyId)).map((d) => <option key={d.id} value={d.id}>{d.name}</option>)}</select><span className="hint">Administrativo, educación, conductores, contabilidad… (se configuran en Cargos y requisitos)</span></div>}
             <div className="field"><label>Cargo (denominación)</label><select value={f.positionId} onChange={set('positionId')}><option value="">Sin cargo</option>{(cat?.positions || []).filter((p) => p.active || String(p.id) === f.positionId).map((p) => <option key={p.id} value={p.id}>{p.name}</option>)}</select><span className="hint">Define los requisitos que se verifican</span></div>
             <div className="field"><label>Profesión</label><input list="th-professions" value={f.profession} onChange={set('profession')} placeholder="Elige o escribe" /></div>
             {field('specialty', 'Especialidad', { placeholder: 'NA si no aplica' })}

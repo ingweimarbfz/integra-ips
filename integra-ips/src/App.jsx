@@ -34,6 +34,8 @@ const InventorySheet = lazy(() => import('./pages/inventario/InventorySheet'))
 const IpsServicesPage = lazy(() => import('./pages/IpsServicesPage'))
 const WarehousesPage = lazy(() => import('./pages/inventario/WarehousesPage'))
 const KitsPage = lazy(() => import('./pages/inventario/KitsPage'))
+const VacationsPage = lazy(() => import('./pages/talento/Vacations').then((m) => ({ default: m.VacationsPage })))
+const MyCvPage = lazy(() => import('./pages/MyCvPage'))
 const PlannedEventsPage = lazy(() => import('./pages/socorro/PlannedEvents').then((m) => ({ default: m.PlannedEventsPage })))
 const PlannedEventDetail = lazy(() => import('./pages/socorro/PlannedEvents').then((m) => ({ default: m.PlannedEventDetail })))
 const MySignaturePage = lazy(() => import('./pages/SignaturePage').then((m) => ({ default: m.MySignaturePage })))
@@ -235,11 +237,21 @@ const App = () => (
             <Route path="estandares/historia-clinica/verificacion/:id" element={<Protected module="historia_clinica" roles={STAFF}><StdChecklistSheet standard="historia_clinica" basePath="/estandares/historia-clinica" title="Lista de chequeo · Documentos obligatorios de historia clínica y registros" /></Protected>} />
             <Route path="estandares/medicamentos" element={<Protected module="medicamentos" roles={STAFF}><StdDocumentsPage standard="medicamentos" key="medicamentos" title="Medicamentos, dispositivos médicos e insumos" subtitle="Estándar transversal 4 · documentos del estándar y control del inventario en Operaciones Generales"><InventoryBridge /></StdDocumentsPage></Protected>} />
             <Route path="estandares/procesos-prioritarios" element={<Protected module="procesos_prioritarios" roles={STAFF}><StdDocumentsPage standard="procesos_prioritarios" key="procesos_prioritarios" title="Procesos prioritarios" subtitle="Estándar transversal 5 · guías, protocolos, procedimientos, formatos e imágenes de la IPS" /></Protected>} />
-            <Route path="estandares/talento-humano" element={<Protected module="talento_humano" roles={STAFF}><ThDashboard /></Protected>} />
-            <Route path="estandares/talento-humano/personal" element={<Protected module="talento_humano" roles={STAFF}><StaffPage /></Protected>} />
-            <Route path="estandares/talento-humano/personal/:id" element={<Protected module="talento_humano" roles={STAFF}><StaffDetail /></Protected>} />
-            <Route path="estandares/talento-humano/chequeo/:id" element={<Protected module="talento_humano" roles={STAFF}><ChecklistSheet /></Protected>} />
-            <Route path="estandares/talento-humano/listado" element={<Protected module="talento_humano" roles={STAFF}><ThListado /></Protected>} />
+            <Route path="estandares/talento-humano" element={<Protected module="talento_humano" roles={STAFF}><ThDashboard key="ips" /></Protected>} />
+            <Route path="estandares/talento-humano/personal" element={<Protected module="talento_humano" roles={STAFF}><StaffPage key="ips" /></Protected>} />
+            <Route path="estandares/talento-humano/personal/:id" element={<Protected module="talento_humano" roles={STAFF}><StaffDetail key="ips" /></Protected>} />
+            <Route path="estandares/talento-humano/chequeo/:id" element={<Protected module="talento_humano" roles={STAFF}><ChecklistSheet key="ips" /></Protected>} />
+            <Route path="estandares/talento-humano/listado" element={<Protected module="talento_humano" roles={STAFF}><ThListado key="ips" /></Protected>} />
+            <Route path="estandares/talento-humano/vacaciones" element={<Protected module="talento_humano" roles={STAFF}><VacationsPage key="ips" /></Protected>} />
+            {/* IIPS-026 · Talento Humano de otras dependencias: las mismas pantallas, con el ámbito tomado de la ruta. */}
+            <Route path="talento-humano" element={<Protected module="th_general" roles={STAFF}><ThDashboard key="general" /></Protected>} />
+            <Route path="talento-humano/todo-el-personal" element={<Protected module={['th_general', 'talento_humano']} roles={STAFF}><ThDashboard key="todos" /></Protected>} />
+            <Route path="talento-humano/personal" element={<Protected module="th_general" roles={STAFF}><StaffPage key="general" /></Protected>} />
+            <Route path="talento-humano/personal/:id" element={<Protected module={['th_general', 'talento_humano']} roles={STAFF}><StaffDetail key="general" /></Protected>} />
+            <Route path="talento-humano/chequeo/:id" element={<Protected module={['th_general', 'talento_humano']} roles={STAFF}><ChecklistSheet key="general" /></Protected>} />
+            <Route path="talento-humano/listado" element={<Protected module="th_general" roles={STAFF}><ThListado key="general" /></Protected>} />
+            <Route path="talento-humano/vacaciones" element={<Protected module="th_general" roles={STAFF}><VacationsPage key="general" /></Protected>} />
+            <Route path="mi-hoja-de-vida" element={<Protected roles={['administrador', 'empleado', 'conductor', 'voluntario', 'docente']}><MyCvPage /></Protected>} />
             <Route path="estandares/talento-humano/instructivo" element={<Protected module="talento_humano" roles={STAFF}><ThGuide /></Protected>} />
             <Route path="estandares/talento-humano/configuracion" element={<Protected roles={ADMIN}><ThConfig /></Protected>} />
             <Route path="educacion" element={<Protected module="edu_dashboard" roles={STAFF}><EduDashboard /></Protected>} />

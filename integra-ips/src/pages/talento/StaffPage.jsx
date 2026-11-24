@@ -4,7 +4,7 @@ import { MdAdd, MdSearch, MdFolderShared, MdErrorOutline, MdPerson, MdWarning } 
 import api, { errorMessage } from '../../api/client'
 import { PageHead, Card, Empty, Spinner, useToast } from '../../components/ui'
 import StaffForm from './StaffForm'
-import { CONTRACT_STATUS, StatusBadge, Percent, useCatalogs } from './common'
+import { CONTRACT_STATUS, StatusBadge, Percent, useCatalogs, thBase, thScope, THSCOPE_LABEL } from './common'
 
 // Hojas de vida del talento humano: búsqueda, filtros y acceso a cada profesional.
 const StaffPage = () => {
@@ -21,13 +21,13 @@ const StaffPage = () => {
   const [creating, setCreating] = useState(false)
   const load = useCallback(async () => {
     setError('')
-    try { const { data } = await api.get('/estandares/th/personal', { params: { q: q || undefined, cargo: cargo || undefined, estado: estado || undefined, alerta: alerta ? 1 : undefined } }); setRows(data) } catch (e) { setError(errorMessage(e)); setRows([]) }
+    try { const { data } = await api.get('/estandares/th/personal', { params: { q: q || undefined, cargo: cargo || undefined, estado: estado || undefined, alerta: alerta ? 1 : undefined, ambito: thScope() } }); setRows(data) } catch (e) { setError(errorMessage(e)); setRows([]) }
   }, [q, cargo, estado, alerta])
   useEffect(() => { const t = setTimeout(load, 250); return () => clearTimeout(t) }, [load])
 
   return (
     <>
-      <PageHead title="Hojas de vida" subtitle="Estándar de talento humano: datos del profesional, soportes, contratos y verificación">
+      <PageHead title={`Hojas de vida · ${THSCOPE_LABEL[thScope()]}`} subtitle="Datos de la persona, soportes, contratos, vacaciones y verificación">
         <button type="button" className="btn btn-primary" onClick={() => setCreating(true)}><MdAdd /> Nueva hoja de vida</button>
       </PageHead>
       <Card flush>
@@ -46,7 +46,7 @@ const StaffPage = () => {
             <tbody>{rows.map((r) => {
               const alerts = r.compliance.missing + r.compliance.expired + r.expiringDocs.length
               return (
-                <tr key={r.id} className="th-row" onClick={() => navigate(`/estandares/talento-humano/personal/${r.id}`)}>
+                <tr key={r.id} className="th-row" onClick={() => navigate(`${thBase()}/personal/${r.id}`)}>
                   <td><div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                     <span className="th-avatar sm">{r.photoUrl ? <img src={r.photoUrl} alt="" /> : <MdPerson />}</span>
                     <div><strong style={{ color: 'var(--ink)' }}>{r.fullName}</strong>{r.status !== 'activo' && <span className="badge" style={{ marginLeft: 6 }}>{r.statusLabel}</span>}<div className="hint">{r.documentType} {r.document}{r.profession ? ` · ${r.profession}` : ''}</div></div>
@@ -62,7 +62,7 @@ const StaffPage = () => {
           </table></div>
         )}
       </Card>
-      {creating && <StaffForm onClose={() => setCreating(false)} onSaved={(d) => { setCreating(false); toast('Hoja de vida creada'); navigate(`/estandares/talento-humano/personal/${d.id}`) }} />}
+      {creating && <StaffForm onClose={() => setCreating(false)} onSaved={(d) => { setCreating(false); toast('Hoja de vida creada'); navigate(`${thBase()}/personal/${d.id}`) }} />}
       {toastNode}
     </>
   )

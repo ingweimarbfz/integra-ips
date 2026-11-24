@@ -3,7 +3,7 @@ import { MdPrint, MdSearch, MdGroups, MdErrorOutline, MdGridOn } from 'react-ico
 import api, { errorMessage } from '../../api/client'
 import { useSettings } from '../../context/SettingsContext'
 import { Spinner } from '../../components/ui'
-import { fmt, printedAt, useCatalogs } from './common'
+import { fmt, printedAt, useCatalogs, thBase, thScope, THSCOPE_LABEL } from './common'
 import FormatHeader from './FormatHeader'
 import '../../components/cytology.css'
 
@@ -21,7 +21,7 @@ const ThListado = () => {
   const tableRef = useRef(null)
   const load = useCallback(async (x) => {
     setLoading(true); setError('')
-    try { const { data } = await api.get('/estandares/th/personal', { params: { cargo: x.cargo || undefined, estado: x.estado || undefined, servicio: x.servicio || undefined } }); setRows(data) } catch (e) { setError(errorMessage(e)) } finally { setLoading(false) }
+    try { const { data } = await api.get('/estandares/th/personal', { params: { cargo: x.cargo || undefined, estado: x.estado || undefined, servicio: x.servicio || undefined, ambito: thScope() } }); setRows(data) } catch (e) { setError(errorMessage(e)) } finally { setLoading(false) }
   }, [])
   // eslint-disable-next-line react-hooks/exhaustive-deps
   useEffect(() => { load(f) }, [load])
