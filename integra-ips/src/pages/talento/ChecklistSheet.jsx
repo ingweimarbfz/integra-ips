@@ -6,7 +6,7 @@ import { useSettings } from '../../context/SettingsContext'
 import { useAuth } from '../../context/AuthContext'
 import { Spinner } from '../../components/ui'
 import { SignBlock, useDocSignatures } from '../../components/signature'
-import { fmt, printedAt } from './common'
+import { fmt, printedAt, thBase, thScope, THSCOPE_LABEL } from './common'
 import FormatHeader from './FormatHeader'
 import '../../components/cytology.css'
 
@@ -29,7 +29,7 @@ const ChecklistSheet = () => {
   return (
     <div className="cy-detail-page">
       <div className="cy-toolbar no-print">
-        <button type="button" className="btn btn-outline" onClick={() => navigate(`/estandares/talento-humano/personal/${s.id}`)}>← Hoja de vida</button>
+        <button type="button" className="btn btn-outline" onClick={() => navigate(`${thBase()}/personal/${s.id}`)}>← Hoja de vida</button>
         <button type="button" className="btn btn-primary" onClick={() => window.print()}>Imprimir / Guardar PDF</button>
       </div>
       <article className="cy-sheet ev-sheet th-form">

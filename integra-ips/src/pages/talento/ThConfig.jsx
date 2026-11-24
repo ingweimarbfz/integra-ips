@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { MdAdd, MdEdit, MdDelete, MdErrorOutline, MdSave, MdWork, MdChecklist, MdDescription } from 'react-icons/md'
+import { MdAdd, MdEdit, MdDelete, MdErrorOutline, MdSave, MdWork, MdChecklist, MdDescription, MdBusinessCenter } from 'react-icons/md'
 import api, { errorMessage } from '../../api/client'
 import { PageHead, Card, Modal, Empty, Spinner, useToast } from '../../components/ui'
 import { useCatalogs, resetCatalogs } from './common'
@@ -111,6 +111,22 @@ const FormatsCard = ({ formats, onSaved }) => {
   )
 }
 
+// IIPS-026 · Dependencias del personal no IPS (administrativo, educación, conductores…).
+const DependenciesCard = ({ list, onChanged, toast }) => {
+  const [name, setName] = useState('')
+  const [busy, setBusy] = useState(false)
+  const add = async () => { if (!name.trim()) return; setBusy(true); try { await api.post('/estandares/th/dependencias', { name }); setName(''); onChanged('Dependencia creada') } catch (e) { toast(errorMessage(e), 'bad') } finally { setBusy(false) } }
+  const toggle = async (d) => { try { await api.put(`/estandares/th/dependencias/${d.id}`, { active: !d.active }); onChanged(d.active ? 'Dependencia desactivada' : 'Dependencia activada') } catch (e) { toast(errorMessage(e), 'bad') } }
+  return (
+    <Card title="Dependencias (personal no IPS)" subtitle="Talento Humano · otras dependencias usa estos mismos cargos y requisitos, separado del personal de IPS." icon={<MdBusinessCenter style={{ color: 'var(--brand)' }} />}>
+      <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 12 }}>
+        {list.map((d) => <button key={d.id} type="button" className={`badge ${d.active ? 'navy' : ''}`} style={{ cursor: 'pointer', border: 0 }} title={d.active ? 'Clic para desactivar' : 'Clic para activar'} onClick={() => toggle(d)}>{d.name}{d.active ? '' : ' (inactiva)'}</button>)}
+      </div>
+      <div style={{ display: 'flex', gap: 8 }}><input value={name} onChange={(e) => setName(e.target.value)} placeholder="Nueva dependencia, p. ej. Mantenimiento" maxLength={80} /><button type="button" className="btn btn-outline" onClick={add} disabled={busy}><MdAdd /> Agregar</button></div>
+    </Card>
+  )
+}
+
 // Configuración del estándar: cargos de la IPS y los requisitos que exige cada uno.
 const ThConfig = () => {
   const [toast, toastNode] = useToast()
@@ -151,6 +167,7 @@ const ThConfig = () => {
           ))}</ul>
         </Card>
       </div>
+      <div style={{ marginTop: 18 }}><DependenciesCard list={cat.dependencies || []} onChanged={reload} toast={toast} /></div>
       <div style={{ marginTop: 18 }}><FormatsCard formats={cat.formats} onSaved={() => reload('Encabezado guardado')} /></div>
       {modal?.pos && <PositionForm cat={cat} initial={modal.pos.id ? modal.pos : null} onClose={() => setModal(null)} onSaved={() => reload('Cargo guardado')} />}
       {modal?.req && <ReqForm cat={cat} initial={modal.req.id ? modal.req : null} onClose={() => setModal(null)} onSaved={() => reload('Requisito guardado')} />}
