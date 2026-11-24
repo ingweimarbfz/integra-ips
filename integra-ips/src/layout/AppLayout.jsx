@@ -10,6 +10,8 @@ import GlobalSearch from '../components/GlobalSearch'
 import TemperatureReminder from '../components/TemperatureReminder'
 import { UpgradeButton } from '../components/UpgradePlan'
 import { IntegraSignature } from '../components/IntegraLogo'
+import AlertsBell from '../components/AlertsBell'
+import { AlertsProvider, useAlerts } from '../context/AlertsContext'
 
 const NAV_OPEN_KEY = 'cv:nav-open'
 const titleFor = (pathname, moduleId) => {
@@ -24,6 +26,10 @@ const titleFor = (pathname, moduleId) => {
   return { section: '', title: '' }
 }
 
+// IIPS-022 · Burbuja con el número de avisos de un ítem, una sección o un módulo.
+const Bubble = ({ n }) => (n > 0 ? <span className="nav-bubble" aria-label={`${n} avisos`}>{n > 99 ? '99+' : n}</span> : null)
+const sumRoutes = (items, countFor) => [...new Set(items.map((i) => i.to))].reduce((a, to) => a + countFor(to), 0)
+
 // Recuerda el último módulo usado para volver a él al iniciar sesión.
 export const MODULE_KEY = 'cv_module'
 const rememberModule = (id) => { try { localStorage.setItem(MODULE_KEY, id) } catch { /* sin almacenamiento */ } }
@@ -31,6 +37,7 @@ const rememberModule = (id) => { try { localStorage.setItem(MODULE_KEY, id) } ca
 // variant 'bar': en escritorio va en línea, en la franja bajo la barra superior.
 const ModuleSwitch = ({ current, user, variant }) => {
   const navigate = useNavigate()
+  const { countFor } = useAlerts()
   const mods = modulesForUser(user)
   if (mods.length < 2) return null
   return (
@@ -39,6 +46,7 @@ const ModuleSwitch = ({ current, user, variant }) => {
         <button key={m.id} type="button" role="tab" aria-selected={current === m.id} title={m.fullLabel}
           className={current === m.id ? 'on' : ''} onClick={() => { rememberModule(m.id); navigate(moduleHome(user, m.id)) }}>
           <m.icon /> {m.label}
+          {current !== m.id && <Bubble n={sumRoutes(navForUser(user, m.id).flatMap((sec) => sec.items), countFor)} />}
         </button>
       ))}
     </div>
@@ -103,8 +111,9 @@ const UserMenu = () => {
   )
 }
 
-const AppLayout = () => {
+const AppLayoutInner = () => {
   const { user, logout } = useAuth()
+  const { countFor } = useAlerts()
   const { settings, logo } = useSettings()
   const { pathname } = useLocation()
   const [open, setOpen] = useState(false)
@@ -191,13 +200,13 @@ const AppLayout = () => {
                   : (
                     <button type="button" className="nav-section-title nav-section-toggle" aria-expanded={isOpen} onClick={() => toggleSection(s.title)}>
                       <span>{s.title}</span>
-                      {!isOpen && <small className="nav-section-count">{s.items.length}</small>}
+                      {!isOpen && (sumRoutes(s.items, countFor) > 0 ? <Bubble n={sumRoutes(s.items, countFor)} /> : <small className="nav-section-count">{s.items.length}</small>)}
                       <MdKeyboardArrowDown className="nav-section-chevron" />
                     </button>
                     )}
                 {isOpen && s.items.map((i) => (
                   <NavLink key={i.to} to={i.to} end={i.end} className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>
-                    <i.icon /> {i.label}
+                    <i.icon /> {i.label}<Bubble n={countFor(i.to)} />
                   </NavLink>
                 ))}
               </div>
@@ -241,6 +250,7 @@ const AppLayout = () => {
             <span className="topbar-spacer" />
             <span className="topbar-date hide-md">{todayLabel}</span>
             <div className="topbar-site">{siteControl}</div>
+            <AlertsBell />
             <UserMenu />
           </header>
           {/* Escritorio: dónde está el usuario, en una franja fija bajo la barra superior. */}
@@ -274,5 +284,8 @@ const AppLayout = () => {
     </div>
   )
 }
+
+// El proveedor de avisos envuelve el layout para que el menú, la campana y los toasts compartan los datos.
+const AppLayout = () => <AlertsProvider><AppLayoutInner /></AlertsProvider>
 
 export default AppLayout

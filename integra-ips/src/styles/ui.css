@@ -980,3 +980,41 @@ a.th-std:hover { box-shadow: var(--shadow-lg, 0 6px 18px rgba(0,0,0,.08)); }
   .module-tabs.bar button { flex: 0 0 auto; padding: 6px 12px; }
 }
 .manual-dt { padding: 12px; border: 1px dashed var(--line); border-radius: 10px; }
+
+/* ---------- IIPS-022 · Centro de notificaciones ---------- */
+.nav-bubble { margin-left: auto; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--bad, #DC2626); color: #fff; font-size: 11px; font-weight: 700; line-height: 20px; text-align: center; flex: 0 0 auto; }
+.nav-link .nav-bubble { margin-left: auto; }
+.nav-section-toggle .nav-bubble { margin-left: auto; margin-right: 6px; }
+.module-switch button { position: relative; }
+.module-switch button .nav-bubble { margin-left: 4px; height: 18px; min-width: 18px; line-height: 18px; font-size: 10.5px; padding: 0 5px; }
+.alerts-bell { position: relative; flex: 0 0 auto; }
+.alerts-bell > .btn { position: relative; font-size: 21px; }
+.bell-badge { position: absolute; top: 2px; right: 0; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 999px; background: var(--warn, #D97706); color: #fff; font-size: 10px; font-weight: 700; line-height: 17px; text-align: center; box-shadow: 0 0 0 2px var(--surface, #fff); }
+.bell-badge.bad { background: var(--bad, #DC2626); }
+.alerts-panel { position: absolute; right: 0; top: calc(100% + 8px); z-index: 120; width: 380px; max-width: calc(100vw - 24px); background: var(--surface, #fff); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow-lg); overflow: hidden; }
+.alerts-panel-head { display: flex; align-items: center; justify-content: space-between; padding: 10px 10px 6px 16px; }
+.alerts-filters { display: flex; gap: 4px; padding: 0 12px 10px; flex-wrap: wrap; border-bottom: 1px solid var(--line-2); }
+.alerts-filters button { border: 1px solid var(--line); background: transparent; border-radius: 999px; padding: 4px 10px; font: 600 11.5px inherit; font-family: inherit; color: var(--muted); cursor: pointer; }
+.alerts-filters button.on { background: var(--brand-50); border-color: var(--brand); color: var(--brand); }
+.alerts-list { max-height: min(60vh, 460px); overflow-y: auto; }
+.alerts-item { display: flex; gap: 10px; width: 100%; padding: 10px 16px; border: 0; border-bottom: 1px solid var(--line-2); background: transparent; text-align: left; cursor: pointer; font-family: inherit; }
+.alerts-item:hover { background: var(--line-2); }
+.alerts-item-icon { font-size: 18px; flex: 0 0 auto; margin-top: 1px; }
+.alerts-item.bad .alerts-item-icon { color: var(--bad, #DC2626); }
+.alerts-item.warn .alerts-item-icon { color: var(--warn, #D97706); }
+.alerts-item.info .alerts-item-icon { color: var(--info, #2563EB); }
+.alerts-item-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; font-size: 12.5px; color: var(--muted); }
+.alerts-item-text b { color: var(--ink); font-size: 13px; font-weight: 600; }
+.alerts-empty { display: flex; align-items: center; gap: 8px; padding: 22px 16px; color: var(--muted); font-size: 13px; }
+.alerts-empty svg { color: var(--ok, #16A34A); font-size: 18px; }
+.alerts-more { padding: 8px 16px; font-size: 11.5px; color: var(--muted); }
+.alert-toasts { position: fixed; right: 24px; bottom: 24px; z-index: 210; display: flex; flex-direction: column; gap: 8px; width: 360px; max-width: calc(100vw - 24px); }
+.alert-toast { display: flex; align-items: flex-start; gap: 10px; padding: 12px 10px 12px 14px; border-radius: 12px; background: var(--ink); color: #fff; box-shadow: var(--shadow-lg); animation: pop .2s; border-left: 4px solid var(--info, #2563EB); }
+.alert-toast.bad { border-left-color: #F87171; } .alert-toast.warn { border-left-color: #FBBF24; }
+.alert-toast-icon { font-size: 18px; margin-top: 1px; }
+.alert-toast.bad .alert-toast-icon { color: #F87171; } .alert-toast.warn .alert-toast-icon { color: #FBBF24; } .alert-toast.info .alert-toast-icon { color: #93C5FD; }
+.alert-toast-body { flex: 1; display: flex; flex-direction: column; gap: 2px; border: 0; background: transparent; color: inherit; text-align: left; font-family: inherit; font-size: 12.5px; cursor: pointer; padding: 0; min-width: 0; }
+.alert-toast-body b { font-size: 13.5px; }
+.alert-toast-body span { opacity: .85; }
+.alert-toast-close { border: 0; background: transparent; color: #fff; opacity: .7; cursor: pointer; font-size: 16px; padding: 2px; }
+@media (max-width: 640px) { .alert-toasts { left: 12px; right: 12px; bottom: 12px; width: auto; } }
