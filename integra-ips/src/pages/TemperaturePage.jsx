@@ -13,6 +13,8 @@ const nowBogota = () => new Intl.DateTimeFormat('en-GB', { timeZone: 'America/Bo
 const firstOfMonth = () => `${today().slice(0, 8)}01`
 const diffDays = (a, b) => Math.round((new Date(b) - new Date(a)) / 86400000)
 const MAX_RANGE = 31
+// Espacio mínimo por lectura en la gráfica: si no cabe, la gráfica se desplaza horizontalmente.
+const PX_PER_READING = 14
 const SHIFTS = { manana: 'Mañana', tarde: 'Tarde' }
 const ShiftBadge = ({ shift, slot }) => <span className={`badge ${shift === 'manana' ? 'warn' : 'navy'}`}>{shift === 'manana' ? <MdWbSunny /> : <MdWbTwilight />} {SHIFTS[shift]}{slot ? ` · ${slot}.ª` : ''}</span>
 // Lecturas del día por defecto (se ajustan a las horas de recordatorio configuradas).
@@ -133,12 +135,14 @@ const TemperaturePage = () => {
         <Link to={`/temperatura/reporte?mes=${reportMonth}`} className="btn btn-primary"><MdPrint /> Reporte mensual PDF</Link>
       </PageHead>
 
-      <div className="grid grid-2-1" style={{ marginBottom: 18 }}>
+      <div className="stack" style={{ marginBottom: 18 }}>
         <Card title="Gráfica del periodo" subtitle={`Cada punto es una lectura (4 al día) con su mínima y máxima · rango permitido ${thresholds.min}–${thresholds.max} °C`}
           actions={alerts > 0 ? <span className="badge bad"><MdWarning /> {alerts} fuera de rango</span> : rows?.length ? <span className="badge ok">Todo en rango</span> : null}>
           {!rows ? <div className="splash" style={{ minHeight: 260 }}><Spinner /></div> : chart.length === 0 ? <Empty icon={<MdThermostat />}>No hay registros en este periodo.</Empty> : (
-            <><ResponsiveContainer width="100%" height={280}>
-              <LineChart data={chart} margin={{ top: 10, right: 12, left: -18, bottom: 0 }}>
+            <><div className="temp-chart-scroll">
+              <div style={{ minWidth: chart.length * PX_PER_READING }}>
+            <ResponsiveContainer width="100%" height={340}>
+              <LineChart data={chart} margin={{ top: 12, right: 16, left: -12, bottom: 4 }}>
                 <CartesianGrid stroke="#EEF0F2" vertical={false} />
                 <ReferenceArea y1={thresholds.min} y2={thresholds.max} fill="#DCFCE7" fillOpacity={0.45} />
                 <XAxis dataKey="x" tick={{ fontSize: 11, fill: '#6B7280' }} tickLine={false} axisLine={false} interval={0} tickFormatter={dayTick(chart)} />
@@ -150,11 +154,13 @@ const TemperaturePage = () => {
                 {READING_LINES(settings).map((l) => <Line key={l.key} type="monotone" dataKey={l.key} name={l.name} stroke={l.color} strokeWidth={2} dot={shiftDot(3.4)} activeDot={{ r: 5.5 }} />)}
               </LineChart>
             </ResponsiveContainer>
+              </div>
+            </div>
             <TempLegend lines={READING_LINES(settings)} /></>
           )}
         </Card>
 
-        <div className="stack">
+        <div className="grid grid-2" style={{ alignItems: 'start' }}>
           <Card title="Nuevo registro" subtitle={`${plan.length} lecturas al día: ${plan.filter((p) => p.shift === 'manana').length} en la mañana y ${plan.filter((p) => p.shift === 'tarde').length} en la tarde. La fecha y la hora se toman automáticamente.`}>
             <form onSubmit={submit} noValidate>
               <div className="temp-slots" role="radiogroup" aria-label="Lectura">

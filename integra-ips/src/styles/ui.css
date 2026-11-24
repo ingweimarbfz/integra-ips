@@ -916,7 +916,7 @@ a.th-std:hover { box-shadow: var(--shadow-lg, 0 6px 18px rgba(0,0,0,.08)); }
 .module-tabs { display: flex; gap: 4px; margin: 4px 16px 6px; padding: 3px; border-radius: 10px; background: var(--surface-2, #F1F5F9); }
 .module-tabs button { flex: 1; border: 0; background: transparent; padding: 7px 6px; border-radius: 8px; font: 600 12px inherit; white-space: nowrap; font-family: inherit; color: var(--muted); cursor: pointer; }
 .module-tabs button.on { background: var(--surface, #fff); color: var(--brand); box-shadow: 0 1px 2px rgba(15, 23, 42, .1); }
-.sidebar-off .module-tabs { display: none; }
+.sidebar-off .module-tabs.side-only { display: none; }
 
 /* Temperatura: selector de lecturas del día */
 .temp-slots { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; }
@@ -962,3 +962,21 @@ a.th-std:hover { box-shadow: var(--shadow-lg, 0 6px 18px rgba(0,0,0,.08)); }
 /* En pantallas angostas un hijo de grilla o columna no debe ensanchar el contenedor */
 .grid > *, .stack > *, .qd-layout > *, .qd-dash-top > * { min-width: 0; }
 @media screen and (max-width: 760px) { .card-head { flex-wrap: wrap; } .card-head > * { min-width: 0; max-width: 100%; } .card-head select, .card-head .input { max-width: 100%; } }
+
+/* Gráfica de temperatura: ancho completo; si hay muchas lecturas se desplaza horizontalmente para que los puntos no se monten. */
+.temp-chart-scroll { overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; padding-bottom: 4px; }
+
+/* IIPS-021 · Escritorio: los módulos (IPS, Operaciones Generales, …) y las pestañas internas pasan a la franja de la miga de pan,
+   en línea y a la derecha. El menú lateral queda solo con sus secciones. En celular y tableta todo sigue en el menú lateral. */
+.crumbs-tabs { display: none; }
+@media screen and (min-width: 1025px) {
+  .side-only { display: none !important; }
+  .topbar-crumbs { height: 44px; overflow: visible; }
+  .crumbs-tabs { display: flex; align-items: center; gap: 8px; margin-left: auto; padding-left: 16px; flex: 0 0 auto; }
+  .module-switch.bar { display: inline-flex; gap: 2px; padding: 3px; border-radius: 10px; }
+  .module-switch.bar button { height: 30px; padding: 0 12px; font-size: 12.5px; }
+  .module-switch.bar button svg { font-size: 15px; }
+  .module-tabs.bar { margin: 0; flex: 0 0 auto; }
+  .module-tabs.bar button { flex: 0 0 auto; padding: 6px 12px; }
+}
+.manual-dt { padding: 12px; border: 1px dashed var(--line); border-radius: 10px; }

@@ -4,6 +4,7 @@ import { MdAdd, MdSearch, MdAssignment, MdErrorOutline, MdFlag, MdArrowForward, 
 import api, { errorMessage } from '../../api/client'
 import { useAuth } from '../../context/AuthContext'
 import { PageHead, Card, Modal, Empty, Spinner } from '../../components/ui'
+import ManualDateTime, { toLocalInput } from '../../components/ManualDateTime'
 import { VehicleLookup, PhotoField, km, money } from './common'
 import { fmtDateTime, duration } from '../socorro/common'
 import { TransferFields, EMPTY_TRANSFER, missingTransfer } from './transfer'
@@ -15,7 +16,7 @@ const NewTripModal = ({ onClose }) => {
   const navigate = useNavigate()
   const [vehicle, setVehicle] = useState(null)
   const [acts, setActs] = useState([])
-  const [f, setF] = useState({ mode: 'previa', eventId: '', activity: '', observation: '' })
+  const [f, setF] = useState({ mode: 'previa', eventId: '', activity: '', observation: '', startedAt: '' })
   const [isTransfer, setIsTransfer] = useState(false)
   const [transfer, setTransfer] = useState(EMPTY_TRANSFER)
   const transferOn = Boolean(vehicle?.isAmbulance) && f.mode === 'nueva' && isTransfer
@@ -53,7 +54,7 @@ const NewTripModal = ({ onClose }) => {
     setSaving(true)
     try {
       const { data } = await api.post('/vehiculos-reportes', {
-        vehicleId: vehicle.id, observation: f.observation,
+        vehicleId: vehicle.id, observation: f.observation, startedAt: f.startedAt || undefined,
         eventId: f.mode === 'previa' ? f.eventId : undefined, activity: f.mode === 'nueva' ? f.activity : undefined,
         transfer: transferOn ? transfer : undefined
       })
@@ -110,7 +111,8 @@ const NewTripModal = ({ onClose }) => {
         )}
         {vehicle && pre && pre.result === 'apto' && <div className="alert ok"><MdFlag /><span>Preoperacional de hoy {pre.code}: vehículo <b>APTO</b>.</span></div>}
         <div className="field"><label>Observación</label><input value={f.observation} onChange={(e) => setF({ ...f, observation: e.target.value })} placeholder="Opcional" /></div>
-        <div className="alert info"><MdAccessTime /><span>La hora de salida se registra automáticamente. Al terminar, cierra la actividad con el km del tacómetro y la foto de evidencia.</span></div>
+        <ManualDateTime value={f.startedAt} onChange={(v) => setF({ ...f, startedAt: v })} label="Fecha y hora de salida" />
+        <div className="alert info"><MdAccessTime /><span>Al terminar, cierra la actividad con el km del tacómetro y la foto de evidencia.</span></div>
         {error && <div className="alert bad"><MdErrorOutline /><span>{error}</span></div>}
       </div>
     </Modal>
@@ -119,7 +121,7 @@ const NewTripModal = ({ onClose }) => {
 
 // ---------------------------------------------------------------- Cerrar actividad
 export const CloseTripModal = ({ trip, onClose, onClosed }) => {
-  const [f, setF] = useState({ kmIn: '', observation: trip.observation || '', fuel: false, fuelValue: '', fuelGallons: '' })
+  const [f, setF] = useState({ kmIn: '', observation: trip.observation || '', fuel: false, fuelValue: '', fuelGallons: '', endedAt: '' })
   const [tach, setTach] = useState(null)
   const [ticket, setTicket] = useState(null)
   const [error, setError] = useState('')
@@ -136,7 +138,7 @@ export const CloseTripModal = ({ trip, onClose, onClosed }) => {
     setSaving(true)
     try {
       const { data } = await api.post(`/vehiculos-reportes/${trip.id}/cerrar`, {
-        kmIn: Number(f.kmIn), tachometerImage: tach, observation: f.observation,
+        kmIn: Number(f.kmIn), tachometerImage: tach, observation: f.observation, endedAt: f.endedAt || undefined,
         fuelValue: f.fuel ? Number(f.fuelValue) : null, fuelGallons: f.fuel && f.fuelGallons ? Number(f.fuelGallons) : null, fuelTicketImage: f.fuel ? ticket : null
       })
       onClosed(data)
@@ -164,7 +166,8 @@ export const CloseTripModal = ({ trip, onClose, onClosed }) => {
             <PhotoField label="Foto del ticket" required value={ticket} onChange={setTicket} />
           </>
         )}
-        <div className="alert info"><MdAccessTime /><span>La hora de llegada se registra automáticamente al cerrar. El km de llegada pasa a ser el km actual de la móvil.</span></div>
+        <ManualDateTime value={f.endedAt} onChange={(v) => setF({ ...f, endedAt: v })} label="Fecha y hora de llegada" min={toLocalInput(trip.startedAt)} />
+        <div className="alert info"><MdAccessTime /><span>El km de llegada pasa a ser el km actual de la móvil.</span></div>
         {error && <div className="alert bad"><MdErrorOutline /><span>{error}</span></div>}
       </div>
     </Modal>

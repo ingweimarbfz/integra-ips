@@ -28,12 +28,13 @@ const titleFor = (pathname, moduleId) => {
 export const MODULE_KEY = 'cv_module'
 const rememberModule = (id) => { try { localStorage.setItem(MODULE_KEY, id) } catch { /* sin almacenamiento */ } }
 
-const ModuleSwitch = ({ current, user }) => {
+// variant 'bar': en escritorio va en línea, en la franja bajo la barra superior.
+const ModuleSwitch = ({ current, user, variant }) => {
   const navigate = useNavigate()
   const mods = modulesForUser(user)
   if (mods.length < 2) return null
   return (
-    <div className={`module-switch${mods.length > 2 ? ' stacked' : ''}`} role="tablist" aria-label="Módulo del sistema">
+    <div className={`module-switch${variant === 'bar' ? ' bar' : mods.length > 2 ? ' stacked' : ''}`} role="tablist" aria-label="Módulo del sistema">
       {mods.map((m) => (
         <button key={m.id} type="button" role="tab" aria-selected={current === m.id} title={m.fullLabel}
           className={current === m.id ? 'on' : ''} onClick={() => { rememberModule(m.id); navigate(moduleHome(user, m.id)) }}>
@@ -170,12 +171,12 @@ const AppLayout = () => {
         <div className="sidebar-site">
           {siteControl}
         </div>
-        <div className="module-wrap">
+        <div className="module-wrap side-only">
           <ModuleSwitch current={moduleId} user={user} />
           <span className="module-name">{currentModule.fullLabel}</span>
         </div>
         {tabsVisible.length > 1 && (
-          <div className="module-tabs" role="tablist" aria-label="Sección del módulo">
+          <div className="module-tabs side-only" role="tablist" aria-label="Sección del módulo">
             {tabsVisible.map((t) => <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} className={tab === t.id ? 'on' : ''} onClick={() => navigate(t.first.to)}>{t.label}</button>)}
           </div>
         )}
@@ -253,6 +254,15 @@ const AppLayout = () => {
             )}
             <MdChevronRight className="topbar-crumbs-sep" aria-hidden="true" />
             <strong aria-current="page">{title || settings.shortName}</strong>
+            {/* Escritorio: módulos y pestañas del módulo en línea, para dejar el menú lateral solo con sus ítems. */}
+            <div className="crumbs-tabs">
+              {tabsVisible.length > 1 && (
+                <div className="module-tabs bar" role="tablist" aria-label="Sección del módulo">
+                  {tabsVisible.map((t) => <button key={t.id} type="button" role="tab" aria-selected={tab === t.id} className={tab === t.id ? 'on' : ''} onClick={() => navigate(t.first.to)}>{t.label}</button>)}
+                </div>
+              )}
+              <ModuleSwitch current={moduleId} user={user} variant="bar" />
+            </div>
           </nav>
         </div>
         <main className="content">
