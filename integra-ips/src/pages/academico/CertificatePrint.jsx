@@ -5,6 +5,7 @@ import api, { errorMessage } from '../../api/client'
 import { useSettings } from '../../context/SettingsContext'
 import { Spinner } from '../../components/ui'
 import '../../components/cytology.css'
+import CertTemplateSheet from './CertTemplateSheet'
 
 const longDate = (iso) => new Intl.DateTimeFormat('es-CO', { dateStyle: 'long', timeZone: 'UTC' }).format(new Date(`${String(iso).slice(0, 10)}T12:00:00Z`))
 
@@ -39,6 +40,9 @@ const CertificatePrint = () => {
       </div>
       {c.voided && <div className="alert bad no-print" style={{ maxWidth: '279mm', margin: '0 auto 12px' }}><span>Certificado anulado: {c.voidReason}</span></div>}
       <div ref={box} className="cert-fit" style={{ height: fit.height ?? undefined }}>
+      {c.template ? (
+        <CertTemplateSheet ref={sheet} t={c.template} c={c} logo={s.logoUrl || settings?.eduLogoUrl || logo} voided={c.voided} style={fit.scale < 1 ? { transform: `scale(${fit.scale})`, transformOrigin: 'top left' } : undefined} />
+      ) : (
       <article ref={sheet} className="cy-sheet sheet-landscape cert-sheet" style={{ position: 'relative', textAlign: 'center', padding: '14mm 18mm', border: '6px double #1F2A44', ...(fit.scale < 1 ? { transform: `scale(${fit.scale})`, transformOrigin: 'top left' } : {}) }}>
         {c.voided && <div aria-hidden="true" style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 110, fontWeight: 800, color: 'rgba(220,38,38,.15)', transform: 'rotate(-15deg)', pointerEvents: 'none' }}>ANULADO</div>}
         <img src={s.logoUrl || settings?.eduLogoUrl || logo} alt={s.institution} style={{ maxHeight: 70, maxWidth: 240, objectFit: 'contain' }} />
@@ -61,6 +65,7 @@ const CertificatePrint = () => {
           <span>Verifica su autenticidad en {verifyUrl} · código <b style={{ letterSpacing: '.1em' }}>{c.verificationCode}</b></span>
         </div>
       </article>
+      )}
       </div>
     </div>
   )
