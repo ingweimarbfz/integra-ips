@@ -6,6 +6,7 @@ import { PageHead, Card, Modal, Empty, Spinner } from '../../components/ui'
 import usePagedList from '../../hooks/usePagedList'
 import LoadMore from '../../components/LoadMore'
 import { PersonLookup, StatusBadge, fmtDateTime, duration } from './common'
+import ManualDateTime from '../../components/ManualDateTime'
 
 export const AREA_INFO = {
   socorro: { title: 'Eventos y emergencias', subtitle: 'Socorro: salida de personal y control de materiales por evento (formatos GSO-F002 y GSO-F003)', newLabel: 'Nuevo evento', modal: 'Nuevo evento o emergencia', name: 'Evento / emergencia', placeholder: 'Ej. Concierto en el Parque de la Leyenda', base: '/socorro/eventos', noun: 'eventos' },
@@ -16,7 +17,7 @@ export const eventPath = (e) => `${AREA_INFO[e.area || 'socorro'].base}/${e.id}`
 const NewEventModal = ({ onClose, area }) => {
   const info = AREA_INFO[area]
   const navigate = useNavigate()
-  const [form, setForm] = useState({ name: '', place: '' })
+  const [form, setForm] = useState({ name: '', place: '', startedAt: '' })
   const [coordinator, setCoordinator] = useState(null)
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
@@ -28,7 +29,7 @@ const NewEventModal = ({ onClose, area }) => {
     if (!coordinator) return setError('Busca y selecciona el coordinador por carnet o documento.')
     setSaving(true)
     try {
-      const { data } = await api.post('/socorro/eventos', { ...form, area, coordinatorId: coordinator.id })
+      const { data } = await api.post('/socorro/eventos', { ...form, startedAt: form.startedAt || undefined, area, coordinatorId: coordinator.id })
       navigate(eventPath(data))
     } catch (err) {
       setError(errorMessage(err))
@@ -46,7 +47,8 @@ const NewEventModal = ({ onClose, area }) => {
         <div className="field"><label>{info.name} <span className="req">*</span></label><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder={info.placeholder} autoFocus maxLength={150} /></div>
         <div className="field"><label>Lugar <span className="req">*</span></label><input value={form.place} onChange={(e) => setForm({ ...form, place: e.target.value })} placeholder="Dirección o sitio" maxLength={150} /></div>
         <PersonLookup label="Coordinador (carnet o documento) *" onFound={setCoordinator} />
-        <div className="alert info"><MdAccessTime /><span>La fecha y la hora de inicio se registran automáticamente. Solo el coordinador podrá agregar o modificar materiales e insumos. Una persona no puede estar en dos eventos en curso a la vez.</span></div>
+        <ManualDateTime value={form.startedAt} onChange={(v) => setForm({ ...form, startedAt: v })} label="Fecha y hora de inicio" />
+        <div className="alert info"><MdAccessTime /><span>Solo el coordinador podrá agregar o modificar materiales e insumos. Una persona no puede estar en dos eventos en curso a la vez.</span></div>
         {error && <div className="alert bad"><MdErrorOutline /><span>{error}</span></div>}
       </form>
     </Modal>

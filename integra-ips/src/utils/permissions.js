@@ -56,7 +56,8 @@ export const USER_MODULES = {
 }
 export const USER_MODULE_GROUPS = { ips: 'IPS', socorro: 'Operaciones Generales', estandares: 'Calidad IPS y Estándares', educacion: 'Educación (institución ETDH)' }
 // El plan contratado limita los módulos de todos (también del administrador).
-export const inPlan = (user, m) => !user?.plan?.modules || user.plan.modules.includes(m)
+// planModules ya descuenta los módulos que la organización apagó (p. ej. Facturación).
+export const inPlan = (user, m) => { const mods = user?.planModules !== undefined ? user.planModules : user?.plan?.modules; return !mods || mods.includes(m) }
 export const hasModule = (user, mod) => {
   if (!user) return false
   if (!mod) return true

@@ -11,11 +11,13 @@ import {
   CATEGORY_LABELS, CATEGORY_TONE, STATE_LABELS, STATE_TONE, isConsumable, CONSUMABLE
 } from './common'
 import EventReport from './EventReport'
+import ManualDateTime, { toLocalInput } from '../../components/ManualDateTime'
 
 // ---------------------------------------------------------------- Finalizar servicio
 const FinishModal = ({ event, onClose, onDone }) => {
   const [rows, setRows] = useState(() => event.materials.map((m) => ({ id: m.id, returned: m.quantity, state: m.state, observation: m.observation || '' })))
   const [obs, setObs] = useState(event.generalObservation || '')
+  const [endedAt, setEndedAt] = useState('')
   const [error, setError] = useState('')
   const [saving, setSaving] = useState(false)
   const complete = rows.every((r, i) => Number(r.returned) === event.materials[i].quantity)
@@ -29,7 +31,7 @@ const FinishModal = ({ event, onClose, onDone }) => {
     }
     setSaving(true)
     try {
-      const { data } = await api.post(`/socorro/eventos/${event.id}/finalizar`, { returns: rows, generalObservation: obs, materialsComplete: complete })
+      const { data } = await api.post(`/socorro/eventos/${event.id}/finalizar`, { returns: rows, generalObservation: obs, materialsComplete: complete, endedAt: endedAt || undefined })
       onDone(data)
     } catch (e) {
       setError(errorMessage(e)); setSaving(false)
@@ -40,10 +42,11 @@ const FinishModal = ({ event, onClose, onDone }) => {
     <Modal title="Finalizar servicio" onClose={onClose} size=""
       footer={<>
         <button type="button" className="btn btn-outline" onClick={onClose}>Cancelar</button>
-        <button type="button" className="btn btn-primary" onClick={submit} disabled={saving}>{saving ? <Spinner /> : <MdFlag />} Finalizar ahora</button>
+        <button type="button" className="btn btn-primary" onClick={submit} disabled={saving}>{saving ? <Spinner /> : <MdFlag />} {endedAt ? 'Finalizar' : 'Finalizar ahora'}</button>
       </>}>
       <div className="stack" style={{ gap: 16 }}>
-        <div className="alert info"><MdAccessTime /><span>La hora de terminación se registra automáticamente al confirmar ({fmtTime(new Date().toISOString())} aprox.). Duración: {duration(event.startedAt)}.</span></div>
+        <ManualDateTime value={endedAt} onChange={setEndedAt} label="Fecha y hora de terminación" min={toLocalInput(event.startedAt)}
+          autoHint={`Se registra la hora del sistema al confirmar (${fmtTime(new Date().toISOString())} aprox.). Duración: ${duration(event.startedAt)}.`} />
         {event.materials.length > 0 ? (
           <div>
             <span className="label">Entrada de materiales</span>
@@ -261,7 +264,7 @@ const EventDetail = () => {
         <div className="ev-info-grid">
           <Info icon={<MdPlace />} label="Lugar">{event.place}</Info>
           <Info icon={<MdPerson />} label="Coordinador">{event.coordinator.fullName}<small>{event.coordinator.carnet} · CC {event.coordinator.document}</small></Info>
-          <Info icon={<MdAccessTime />} label="Inicio">{fmtDateTime(event.startedAt)}</Info>
+          <Info icon={<MdAccessTime />} label="Inicio">{fmtDateTime(event.startedAt)}{event.recordedAt && Math.abs(new Date(event.recordedAt) - new Date(event.startedAt)) > 300000 && <small style={{ display: 'block', color: 'var(--muted)' }}>Hora manual · registrado {fmtDateTime(event.recordedAt)}</small>}</Info>
           <Info icon={<MdFlag />} label={open ? 'Duración (en curso)' : 'Terminación'}>{open ? duration(event.startedAt) : fmtDateTime(event.endedAt)}{!open && <small>Duración: {duration(event.startedAt, event.endedAt)}</small>}</Info>
         </div>
       </section>
