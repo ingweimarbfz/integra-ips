@@ -43,7 +43,7 @@ const PendingSignatures = ({ types } = {}) => {
         {shown.map((it) => (
           <li key={key(it)}>
             <div className="grow">
-              <strong>{it.title} <span className={`badge ${TYPE_TONE[it.docType] || ''}`} style={{ fontSize: 10.5 }}>{it.slotLabel}</span></strong>
+              <strong>{it.title} <span className={`badge ${TYPE_TONE[it.docType] || ''}`} style={{ fontSize: 10.5 }}>{it.slotLabel}</span>{it.asDirector && <span className="badge navy" style={{ fontSize: 10.5, marginLeft: 4 }}>Como director</span>}</strong>
               <span>{it.subtitle}{it.date ? ` · ${fmt(it.date)}` : ''}</span>
             </div>
             <div className="pending-actions">

@@ -83,6 +83,9 @@ const UserMenu = () => {
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
   const ref = useRef(null)
+  // IIPS-023: cargos de director del usuario (se muestran bajo su rol).
+  const [areas, setAreas] = useState([])
+  useEffect(() => { api.get('/mi-direccion').then(({ data }) => setAreas(data.areas || [])).catch(() => {}) }, [user.id])
 
   useEffect(() => {
     const onClick = (e) => ref.current && !ref.current.contains(e.target) && setOpen(false)
@@ -102,6 +105,7 @@ const UserMenu = () => {
       </button>
       {open && (
         <div className="dropdown" role="menu">
+          {areas.length > 0 && <div className="dropdown-note">{areas.map((a) => <span key={`${a.area}${a.serviceId || ''}`}>{a.label}</span>)}</div>}
           <button type="button" onClick={() => { setOpen(false); navigate('/perfil') }}><MdPerson /> Mi perfil</button>
           <hr />
           <button type="button" className="danger" onClick={logout}><MdLogout /> Cerrar sesión</button>
@@ -218,7 +222,7 @@ const AppLayoutInner = () => {
           <nav className="sidebar-account" aria-label="Cuenta">
             {(sections.find((s) => s.title === 'Cuenta')?.items || []).map((i) => (
               <NavLink key={i.to} to={i.to} end={i.end} className={({ isActive }) => `nav-link${isActive ? ' active' : ''}`}>
-                <i.icon /> {i.label}
+                <i.icon /> {i.label}<Bubble n={countFor(i.to)} />
               </NavLink>
             ))}
           </nav>

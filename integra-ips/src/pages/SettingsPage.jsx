@@ -9,6 +9,7 @@ import { inPlan } from '../utils/permissions'
 import { UsersSignaturesCard } from './SignaturePage'
 import DiscountsCard from './DiscountsCard'
 import ModulesCard from './ModulesCard'
+import DirectorsCard from './DirectorsCard'
 import { resizeImage } from '../utils/image'
 import defaultLogo from '../assets/integraLogo.svg'
 import defaultLoginImage from '../assets/loginHealth.svg'
@@ -234,6 +235,7 @@ const SettingsPage = () => {
       {toastNode}
     </form>
     <div id="modulos" style={{ marginTop: 18 }}><ModulesCard /></div>
+    <div id="directores" style={{ marginTop: 18 }}><DirectorsCard /></div>
     <div id="descuentos" style={{ marginTop: 18 }}><DiscountsCard /></div>
     <div id="firmas" style={{ marginTop: 18 }}><UsersSignaturesCard /></div>
     <div id="legal" style={{ marginTop: 18 }}>
