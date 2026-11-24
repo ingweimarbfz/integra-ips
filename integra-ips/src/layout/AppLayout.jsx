@@ -200,7 +200,7 @@ const AppLayoutInner = () => {
                   : (
                     <button type="button" className="nav-section-title nav-section-toggle" aria-expanded={isOpen} onClick={() => toggleSection(s.title)}>
                       <span>{s.title}</span>
-                      {!isOpen && (sumRoutes(s.items, countFor) > 0 ? <Bubble n={sumRoutes(s.items, countFor)} /> : <small className="nav-section-count">{s.items.length}</small>)}
+                      {!isOpen && <Bubble n={sumRoutes(s.items, countFor)} />}
                       <MdKeyboardArrowDown className="nav-section-chevron" />
                     </button>
                     )}

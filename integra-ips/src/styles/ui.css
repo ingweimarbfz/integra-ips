@@ -982,16 +982,17 @@ a.th-std:hover { box-shadow: var(--shadow-lg, 0 6px 18px rgba(0,0,0,.08)); }
 .manual-dt { padding: 12px; border: 1px dashed var(--line); border-radius: 10px; }
 
 /* ---------- IIPS-022 · Centro de notificaciones ---------- */
-.nav-bubble { margin-left: auto; min-width: 20px; height: 20px; padding: 0 6px; border-radius: 999px; background: var(--bad, #DC2626); color: #fff; font-size: 11px; font-weight: 700; line-height: 20px; text-align: center; flex: 0 0 auto; }
-.nav-link .nav-bubble { margin-left: auto; }
-.nav-section-toggle .nav-bubble { margin-left: auto; margin-right: 6px; }
+/* Todas las burbujas del mismo tamaño: círculo de 20 px (se alarga solo con 3 cifras). */
+.nav-bubble, .nav-section-toggle span.nav-bubble { flex: none; display: inline-flex; align-items: center; justify-content: center; box-sizing: border-box; min-width: 20px; height: 20px; padding: 0 5px; margin-left: auto; border-radius: 999px; background: var(--bad, #DC2626); color: #fff; font-size: 10.5px; font-weight: 700; line-height: 1; letter-spacing: 0; }
+.nav-section-toggle span.nav-bubble { margin-right: 4px; }
 .module-switch button { position: relative; }
-.module-switch button .nav-bubble { margin-left: 4px; height: 18px; min-width: 18px; line-height: 18px; font-size: 10.5px; padding: 0 5px; }
+.module-switch button .nav-bubble { margin-left: 4px; }
 .alerts-bell { position: relative; flex: 0 0 auto; }
 .alerts-bell > .btn { position: relative; font-size: 21px; }
 .bell-badge { position: absolute; top: 2px; right: 0; min-width: 17px; height: 17px; padding: 0 4px; border-radius: 999px; background: var(--warn, #D97706); color: #fff; font-size: 10px; font-weight: 700; line-height: 17px; text-align: center; box-shadow: 0 0 0 2px var(--surface, #fff); }
 .bell-badge.bad { background: var(--bad, #DC2626); }
-.alerts-panel { position: absolute; right: 0; top: calc(100% + 8px); z-index: 120; width: 380px; max-width: calc(100vw - 24px); background: var(--surface, #fff); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow-lg); overflow: hidden; }
+/* El panel se fija al borde derecho de la ventana: nunca queda bajo el menú lateral ni se sale por la izquierda. */
+.alerts-panel { position: fixed; right: 16px; top: 64px; z-index: 120; width: 380px; max-width: calc(100vw - 24px); background: var(--surface, #fff); border: 1px solid var(--line); border-radius: 14px; box-shadow: var(--shadow-lg); overflow: hidden; }
 .alerts-panel-head { display: flex; align-items: center; justify-content: space-between; padding: 10px 10px 6px 16px; }
 .alerts-filters { display: flex; gap: 4px; padding: 0 12px 10px; flex-wrap: wrap; border-bottom: 1px solid var(--line-2); }
 .alerts-filters button { border: 1px solid var(--line); background: transparent; border-radius: 999px; padding: 4px 10px; font: 600 11.5px inherit; font-family: inherit; color: var(--muted); cursor: pointer; }
@@ -1018,3 +1019,7 @@ a.th-std:hover { box-shadow: var(--shadow-lg, 0 6px 18px rgba(0,0,0,.08)); }
 .alert-toast-body span { opacity: .85; }
 .alert-toast-close { border: 0; background: transparent; color: #fff; opacity: .7; cursor: pointer; font-size: 16px; padding: 2px; }
 @media (max-width: 640px) { .alert-toasts { left: 12px; right: 12px; bottom: 12px; width: auto; } }
+
+/* La campana va a la derecha, junto al usuario. */
+@media screen and (min-width: 1025px) { .topbar .alerts-bell { order: 5; } .topbar .user-menu { order: 6; } }
+@media (max-width: 1024px) { .topbar .alerts-bell { margin-left: auto; } .alerts-panel { right: 12px; left: 12px; width: auto; } }
