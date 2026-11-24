@@ -36,6 +36,8 @@ const WarehousesPage = lazy(() => import('./pages/inventario/WarehousesPage'))
 const KitsPage = lazy(() => import('./pages/inventario/KitsPage'))
 const VacationsPage = lazy(() => import('./pages/talento/Vacations').then((m) => ({ default: m.VacationsPage })))
 const MyCvPage = lazy(() => import('./pages/MyCvPage'))
+const VirtualClassroom = lazy(() => import('./pages/academico/VirtualClassroom'))
+const CertTemplatesPage = lazy(() => import('./pages/academico/CertTemplates'))
 const PatientsSearch = lazy(() => import('./pages/PatientsPage').then((m) => ({ default: m.PatientsSearch })))
 const PatientDetail = lazy(() => import('./pages/PatientsPage').then((m) => ({ default: m.PatientDetail })))
 const PlannedEventsPage = lazy(() => import('./pages/socorro/PlannedEvents').then((m) => ({ default: m.PlannedEventsPage })))
@@ -255,6 +257,8 @@ const App = () => (
             <Route path="talento-humano/vacaciones" element={<Protected module="th_general" roles={STAFF}><VacationsPage key="general" /></Protected>} />
             <Route path="pacientes" element={<Protected module={['citologias', 'vacunacion', 'traslado']} roles={STAFF}><PatientsSearch /></Protected>} />
             <Route path="pacientes/:doc" element={<Protected module={['citologias', 'vacunacion', 'traslado']} roles={STAFF}><PatientDetail /></Protected>} />
+            <Route path="educacion/aula-virtual/:id" element={<Protected roles={['administrador', 'empleado', 'docente', 'estudiante']}><VirtualClassroom /></Protected>} />
+            <Route path="educacion/plantillas-certificado" element={<Protected roles={ADMIN}><CertTemplatesPage /></Protected>} />
             <Route path="mi-hoja-de-vida" element={<Protected roles={['administrador', 'empleado', 'conductor', 'voluntario', 'docente']}><MyCvPage /></Protected>} />
             <Route path="estandares/talento-humano/instructivo" element={<Protected module="talento_humano" roles={STAFF}><ThGuide /></Protected>} />
             <Route path="estandares/talento-humano/configuracion" element={<Protected roles={ADMIN}><ThConfig /></Protected>} />

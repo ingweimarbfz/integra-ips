@@ -28,6 +28,7 @@ const rangeOf = (view, anchor) => {
 
 const ClassActions = ({ x, teacher }) => (
   <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+    {x.status !== 'cancelada' && x.modality === 'virtual' && x.platform === 'jitsi' && <a className="btn btn-primary btn-sm" href={`/educacion/aula-virtual/${x.id}`}><MdOpenInNew /> Entrar al aula</a>}
     {x.status !== 'cancelada' && x.modality === 'virtual' && x.meetingUrl && <a className="btn btn-primary btn-sm" href={x.meetingUrl} target="_blank" rel="noreferrer"><MdOpenInNew /> {teacher ? `Abrir ${x.platformLabel || 'clase'}` : 'Entrar a la clase'}</a>}
     {teacher && x.status !== 'cancelada' && <Link className="btn btn-outline btn-sm" to={`/educacion/clases/${x.id}/asistencia`}><MdFactCheck /> Asistencia</Link>}
   </div>

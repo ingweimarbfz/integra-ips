@@ -284,7 +284,8 @@ const NAV = {
       { to: '/educacion/facturas', label: 'Facturas', icon: MdReceiptLong, roles: STAFF, module: 'edu_estudiantes', end: true },
       { to: '/educacion/cartera', label: 'Cartera', icon: MdAccountBalanceWallet, roles: STAFF, module: 'edu_estudiantes' },
       { to: '/educacion/convenios', label: 'Convenios', icon: MdHandshake, roles: STAFF, module: ['edu_estudiantes', 'edu_programas'] },
-      { to: '/educacion/configuracion', label: 'Reglamento, planes de pago y descuentos', icon: MdTune, roles: ADMIN }
+      { to: '/educacion/configuracion', label: 'Reglamento, planes de pago y descuentos', icon: MdTune, roles: ADMIN },
+      { to: '/educacion/plantillas-certificado', label: 'Plantillas de certificado', icon: MdWorkspacePremiumIcon, roles: ADMIN }
     ] },
     { title: 'Institución', items: [
       { to: '/educacion/acreditacion', label: 'Acreditación', icon: MdDashboard, roles: STAFF, end: true, module: ['edu_dashboard', 'edu_programas'] },
