@@ -8,7 +8,7 @@ const TZ = 'America/Bogota'
 const fmtSigned = (iso) => new Intl.DateTimeFormat('es-CO', { timeZone: TZ, day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }).format(new Date(iso))
 
 // Lienzo para dibujar la firma con el mouse, el dedo o un lápiz. Exporta PNG con fondo blanco.
-const SignaturePad = ({ onChange }) => {
+export const SignaturePad = ({ onChange }) => {
   const ref = useRef(null)
   const drawing = useRef(false)
   const dirty = useRef(false)
