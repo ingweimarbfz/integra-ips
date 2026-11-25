@@ -143,7 +143,10 @@ const NAV = {
         { to: '/vacunacion/registrar', label: 'Registrar vacunación', icon: MdVaccines, roles: STAFF, service: 'cadena_frio', module: 'vacunacion' },
         { to: '/vacunacion/consultar', label: 'Consultar, carnet y ESAVI', icon: MdManageSearch, roles: STAFF, service: 'cadena_frio', module: 'vacunacion' },
         { to: '/vacunacion/seguimiento', label: 'Seguimiento de dosis', icon: MdEventRepeat, roles: STAFF, service: 'cadena_frio', module: 'vacunacion' },
-        { to: '/vacunacion/biologicos', label: 'Biológicos', icon: MdTune, roles: ADMIN, service: 'cadena_frio' }
+        { to: '/vacunacion/biologicos', label: 'Biológicos', icon: MdTune, roles: ADMIN, service: 'cadena_frio' },
+        // La cadena de frío es parte de vacunación (temperatura de neveras).
+        { to: '/temperatura', label: 'Cadena de frío · temperatura', icon: MdThermostat, roles: STAFF, service: 'cadena_frio', module: 'temperatura', end: true },
+        { to: '/temperatura/configuracion', label: 'Configuración de cadena de frío', icon: MdTune, roles: ADMIN, service: 'cadena_frio' }
       ]
     },
     {
@@ -159,7 +162,6 @@ const NAV = {
       ]
     },
     { title: 'Traslado asistencial', items: [{ to: '/traslado-asistencial', label: 'Ambulancias', icon: MdAirportShuttle, roles: ['administrador', 'conductor'], service: 'ambulancias', module: 'traslado', grantable: false }] },
-    { title: 'Cadena de frío', items: [{ to: '/temperatura', label: 'Registro de temperatura', icon: MdThermostat, roles: STAFF, service: 'cadena_frio', module: 'temperatura', end: true }, { to: '/temperatura/configuracion', label: 'Configuración', icon: MdTune, roles: ADMIN, service: 'cadena_frio' }] },
     { title: 'Equipos e infraestructura', items: [{ to: '/equipos', label: 'Hoja de vida de equipos', icon: MdMedicalServices, roles: STAFF, service: 'any', module: 'equipos' }] },
     ...SHARED
   ],
