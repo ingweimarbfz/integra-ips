@@ -36,6 +36,7 @@ const WarehousesPage = lazy(() => import('./pages/inventario/WarehousesPage'))
 const KitsPage = lazy(() => import('./pages/inventario/KitsPage'))
 const VacationsPage = lazy(() => import('./pages/talento/Vacations').then((m) => ({ default: m.VacationsPage })))
 const MyCvPage = lazy(() => import('./pages/MyCvPage'))
+const PendingSignaturesPage = lazy(() => import('./pages/PendingSignaturesPage'))
 const Corr = (name) => lazy(() => import('./pages/correspondencia/Correspondence').then((m) => ({ default: m[name] })))
 const CorrDashboard = Corr('CorrDashboard'); const CorrNew = Corr('CorrNew'); const CorrRegister = Corr('CorrRegister'); const CorrInbox = Corr('CorrInbox'); const CorrDetail = Corr('CorrDetail'); const CorrAreas = Corr('CorrAreas')
 const CertTemplatesPage = lazy(() => import('./pages/academico/CertTemplates'))
@@ -203,6 +204,7 @@ const App = () => (
             <Route path="notificaciones" element={<Protected roles={ADMIN}><NotificationsPage /></Protected>} />
             <Route path="perfil" element={<ProfilePage />} />
             <Route path="firma" element={<MySignaturePage />} />
+            <Route path="firmas-pendientes" element={<PendingSignaturesPage />} />
             <Route path="mis-notificaciones" element={<MyNotificationsPage />} />
             <Route path="socorro" element={<Protected module="og_dashboard" roles={ALL}><SocorroDashboard /></Protected>} />
             <Route path="socorro/vehiculos" element={<Protected module="flota" roles={FLEET_DASH}><FleetDashboard /></Protected>} />

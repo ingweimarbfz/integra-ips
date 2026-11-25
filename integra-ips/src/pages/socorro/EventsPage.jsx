@@ -6,7 +6,7 @@ import { PageHead, Card, Modal, Empty, Spinner } from '../../components/ui'
 import usePagedList from '../../hooks/usePagedList'
 import LoadMore from '../../components/LoadMore'
 import { PersonLookup, StatusBadge, fmtDateTime, duration } from './common'
-import ManualDateTime from '../../components/ManualDateTime'
+import ManualDateTime, { toLocalInput } from '../../components/ManualDateTime'
 
 export const AREA_INFO = {
   socorro: { title: 'Eventos y emergencias', subtitle: 'Socorro: salida de personal y control de materiales por evento (formatos GSO-F002 y GSO-F003)', newLabel: 'Nuevo evento', modal: 'Nuevo evento o emergencia', name: 'Evento / emergencia', placeholder: 'Ej. Concierto en el Parque de la Leyenda', base: '/socorro/eventos', noun: 'eventos' },
@@ -27,7 +27,8 @@ const NewEventModal = ({ onClose, area, plannedInitial }) => {
     setPlannedId(String(id || ''))
     const p = planned.find((x) => String(x.id) === String(id))
     if (!p) return
-    setForm((f) => ({ ...f, name: p.name, place: p.place || f.place }))
+    // La hora de inicio del evento programado queda como hora manual (se puede ajustar).
+    setForm((f) => ({ ...f, name: p.name, place: p.place || f.place, startedAt: p.startsAt ? toLocalInput(p.startsAt) : f.startedAt }))
     if (p.coordinator) setCoordinator(p.coordinator)
   }
   useEffect(() => { if (plannedInitial && planned.length) pick(plannedInitial) }, [plannedInitial, planned]) // eslint-disable-line react-hooks/exhaustive-deps
@@ -67,7 +68,7 @@ const NewEventModal = ({ onClose, area, plannedInitial }) => {
         <div className="field"><label>{info.name} <span className="req">*</span></label><input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} placeholder={info.placeholder} autoFocus maxLength={150} /></div>
         <div className="field"><label>Lugar <span className="req">*</span></label><input value={form.place} onChange={(e) => setForm({ ...form, place: e.target.value })} placeholder="Dirección o sitio" maxLength={150} /></div>
         {coordinator && plannedId ? <div className="picked-user"><span>Coordinador: <b>{coordinator.fullName}</b></span><button type="button" className="btn btn-ghost btn-sm" onClick={() => setCoordinator(null)}>Cambiar</button></div> : <PersonLookup label="Coordinador (carnet o documento) *" onFound={setCoordinator} />}
-        <ManualDateTime value={form.startedAt} onChange={(v) => setForm({ ...form, startedAt: v })} label="Fecha y hora de inicio" />
+        <ManualDateTime value={form.startedAt} onChange={(v) => setForm({ ...form, startedAt: v })} label="Fecha y hora de inicio" allowFuture autoHint="Se toma la hora actual. Si el evento empieza después (planilla diligenciada antes), marca la opción e indica la hora de inicio: las horas se calculan desde ahí al finalizar." />
         <div className="alert info"><MdAccessTime /><span>Solo el coordinador podrá agregar o modificar materiales e insumos. Una persona no puede estar en dos eventos en curso a la vez.</span></div>
         {error && <div className="alert bad"><MdErrorOutline /><span>{error}</span></div>}
       </form>

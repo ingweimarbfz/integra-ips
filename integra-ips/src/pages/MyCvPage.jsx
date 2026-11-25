@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { MdContactPage, MdCheckCircle, MdWarning, MdError, MdWork, MdDraw } from 'react-icons/md'
 import api, { errorMessage } from '../api/client'
 import { PageHead, Card, Empty, Spinner } from '../components/ui'
-import { VacationCard } from './talento/Vacations'
+import { VacationCard, MyVacationRequests } from './talento/Vacations'
 import { fmt, Percent } from './talento/common'
 import { useAlerts } from '../context/AlertsContext'
 
@@ -19,14 +19,14 @@ const MyCvPage = () => {
   if (error) return <div className="alert bad">{error}</div>
   if (!d) return <div className="splash" style={{ minHeight: 300 }}><Spinner /></div>
   const s = d.staff
-  const pendingSign = countFor('/firma')
+  const pendingSign = countFor('/firmas-pendientes')
   return (
     <>
       <PageHead title="Mi hoja de vida" subtitle="Tus requisitos, soportes, contrato, vacaciones y pendientes." />
       <div className="grid grid-2" style={{ alignItems: 'start', marginBottom: 18 }}>
         <Card title="Mis pendientes" icon={<MdDraw style={{ color: 'var(--brand)' }} />}>
           <ul className="list">
-            <li><div className="grow"><strong>Documentos por firmar</strong><span>{pendingSign ? `Tienes ${pendingSign} pendiente${pendingSign === 1 ? '' : 's'}` : 'Nada pendiente'}</span></div><Link className="btn btn-outline btn-sm" to="/firma">Ir a firmar</Link></li>
+            <li><div className="grow"><strong>Documentos por firmar</strong><span>{pendingSign ? `Tienes ${pendingSign} pendiente${pendingSign === 1 ? '' : 's'}` : 'Nada pendiente'}</span></div><Link className="btn btn-outline btn-sm" to="/firmas-pendientes">Ir a firmar</Link></li>
             <li><div className="grow"><strong>Avisos del sistema</strong><span>{alerts?.total ? `${alerts.total} en la campana` : 'Sin avisos'}</span></div></li>
           </ul>
         </Card>
@@ -54,7 +54,10 @@ const MyCvPage = () => {
               ) })}</tbody>
             </table></div>
           </Card>
-          <VacationCard staffId={s.id} initial={d.vacation} readOnly />
+          <div className="stack" style={{ gap: 16 }}>
+            <MyVacationRequests vacation={d.vacation} />
+            <VacationCard staffId={s.id} initial={d.vacation} readOnly />
+          </div>
         </div>
       )}
     </>

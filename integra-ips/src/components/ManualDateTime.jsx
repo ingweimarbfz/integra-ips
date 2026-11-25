@@ -10,7 +10,7 @@ const bogota = (d) => {
 }
 export const nowLocal = () => bogota(new Date())
 
-const ManualDateTime = ({ value, onChange, label = 'Fecha y hora de inicio', autoHint, min }) => {
+const ManualDateTime = ({ value, onChange, label = 'Fecha y hora de inicio', autoHint, min, allowFuture = false }) => {
   const manual = value !== ''
   const floor = bogota(new Date(Date.now() - MANUAL_MAX_DAYS * 86400000))
   return (
@@ -22,8 +22,8 @@ const ManualDateTime = ({ value, onChange, label = 'Fecha y hora de inicio', aut
       {manual ? (
         <div className="field" style={{ marginTop: 10 }}>
           <label>{label} <span className="req">*</span></label>
-          <input type="datetime-local" value={value} max={nowLocal()} min={min && min > floor ? min : floor} onChange={(e) => onChange(e.target.value)} />
-          <span className="hint">Hora de Colombia. Queda constancia de la hora real en que se registró.</span>
+          <input type="datetime-local" value={value} max={allowFuture ? bogota(new Date(Date.now() + 30 * 86400000)) : nowLocal()} min={min && min > floor ? min : floor} onChange={(e) => onChange(e.target.value)} />
+          <span className="hint">Hora de Colombia{allowFuture ? '; puede ser posterior a ahora si la planilla se llena antes del evento' : ''}. Queda constancia de la hora real en que se registró.</span>
         </div>
       ) : (
         <span className="hint" style={{ display: 'block', marginTop: 6 }}><MdAccessTime style={{ verticalAlign: '-2px' }} /> {autoHint || 'Se toma la fecha y la hora del sistema al registrar.'}</span>
