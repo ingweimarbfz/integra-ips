@@ -6,7 +6,8 @@ import {
 } from 'recharts'
 import {
   MdThermostat, MdWarning, MdCheckCircle, MdBiotech, MdTrendingUp, MdTrendingDown, MdEventAvailable, MdAttachMoney,
-  MdPeople, MdVaccines, MdScience, MdLocalHospital, MdMedication, MdMonitorHeart, MdArrowForward, MdAcUnit
+  MdPeople, MdVaccines, MdScience, MdLocalHospital, MdMedication, MdMonitorHeart, MdArrowForward, MdAcUnit,
+  MdAirportShuttle, MdReceiptLong, MdMedicalServices, MdPersonSearch
 } from 'react-icons/md'
 import { Card, Empty } from '../../components/ui'
 import { formatDate, formatMoney } from '../../utils/format'
@@ -293,9 +294,12 @@ const RecentCyto = ({ data }) => (
 // ---------------------------------------------------------------- Servicios de la IPS (escalable)
 // Para habilitar un servicio nuevo: cambiar status a 'active', agregar su ruta y sus widgets.
 export const SERVICES = [
-  { id: 'cadena-frio', name: 'Cadena de frío', desc: 'Temperatura de neveras y ambiente', icon: MdThermostat, status: 'active', to: '/temperatura' },
-  { id: 'citologia', name: 'Citología', desc: 'Toma de muestras cervicouterinas', icon: MdBiotech, status: 'active', to: '/citologias/consultar' },
-  { id: 'vacunacion', name: 'Vacunación PAI', desc: 'Dosis aplicadas e inventario', icon: MdVaccines, status: 'soon' },
+  { id: 'vacunacion', name: 'Vacunación PAI', desc: 'Registro, carnet, seguimiento de dosis, ESAVI y cadena de frío', icon: MdVaccines, status: 'active', to: '/vacunacion' },
+  { id: 'citologia', name: 'Citología', desc: 'Toma de muestras cervicouterinas y resultados', icon: MdBiotech, status: 'active', to: '/citologias/consultar' },
+  { id: 'traslado', name: 'Traslado asistencial', desc: 'Ambulancias TAB y TAM con tripulación', icon: MdAirportShuttle, status: 'active', to: '/traslado-asistencial' },
+  { id: 'facturacion', name: 'Facturación y convenios', desc: 'Facturas, EPS y cuentas de cobro', icon: MdReceiptLong, status: 'active', to: '/facturacion' },
+  { id: 'equipos', name: 'Equipos biomédicos', desc: 'Hoja de vida y mantenimientos', icon: MdMedicalServices, status: 'active', to: '/equipos' },
+  { id: 'historial', name: 'Historial por persona', desc: 'Servicios recibidos por cada paciente', icon: MdPersonSearch, status: 'active', to: '/pacientes' },
   { id: 'laboratorio', name: 'Laboratorio clínico', desc: 'Órdenes y resultados', icon: MdScience, status: 'soon' },
   { id: 'consulta', name: 'Consulta externa', desc: 'Agenda y atenciones', icon: MdLocalHospital, status: 'soon' },
   { id: 'farmacia', name: 'Farmacia', desc: 'Dispensación y stock', icon: MdMedication, status: 'soon' },
