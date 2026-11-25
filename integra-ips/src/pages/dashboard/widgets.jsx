@@ -107,7 +107,7 @@ const TempMonth = ({ data, colors }) => {
     <Card title="Temperatura del mes" subtitle="Cada punto es una lectura (4 al día) con su mínima y máxima, frente al rango permitido"
       actions={<div className="legend"><span><i style={{ background: colors.primary }} />Máxima</span><span><i style={{ background: colors.secondary }} />Mínima</span><span><i style={{ background: SHIFT_COLORS.manana, borderRadius: '50%' }} />Mañana</span><span><i style={{ background: SHIFT_COLORS.tarde, borderRadius: '50%' }} />Tarde</span></div>}>
       {series.length === 0 ? <Empty icon={<MdThermostat />}>No hay temperaturas registradas en este mes.</Empty> : (
-        <ResponsiveContainer width="100%" height={280}>
+        <ResponsiveContainer width="100%" height={340}>
           <LineChart data={points} margin={{ top: 10, right: 12, left: -18, bottom: 0 }}>
             <CartesianGrid stroke="#EEF0F2" vertical={false} />
             <ReferenceArea y1={min} y2={max} fill="#DCFCE7" fillOpacity={0.45} />
@@ -130,8 +130,8 @@ const Alerts = ({ data, role }) => {
   const { alerts, registeredToday, last } = data.temperature
   return (
     <Card title="Alertas de temperatura" subtitle={`${alerts.length} lectura${alerts.length === 1 ? '' : 's'} fuera de rango`}
-      actions={alerts.length ? <span className="badge bad"><span className="dot" /> {alerts.length}</span> : <span className="badge ok">Sin alertas</span>}>
-      <ul className="list">
+      actions={<>{alerts.length ? <span className="badge bad"><span className="dot" /> {alerts.length}</span> : <span className="badge ok">Sin alertas</span>}{alerts.length > 6 && STAFF.includes(role) && <Link className="btn btn-ghost btn-sm" to="/temperatura/reporte">Ver todas</Link>}</>}>
+      <ul className="list list-cols">
         {registeredToday === false && (
           <li>
             <span className="icon-bubble info"><MdEventAvailable /></span>
@@ -404,8 +404,8 @@ const Equipment = ({ data, role }) => {
 // span: columnas que ocupa (de 3). roles: quién lo ve. Agregar un widget = agregar una entrada.
 export const WIDGETS = [
   { id: 'kpis', span: 3, roles: ALL, render: (p) => <KpiRow {...p} /> },
-  { id: 'temp-month', span: 2, roles: ALL, render: (p) => <TempMonth {...p} /> },
-  { id: 'alerts', span: 1, roles: ALL, render: (p) => <Alerts {...p} /> },
+  { id: 'temp-month', span: 3, roles: ALL, render: (p) => <TempMonth {...p} /> },
+  { id: 'alerts', span: 3, roles: ALL, render: (p) => <Alerts {...p} /> },
   { id: 'max-bars', span: 2, roles: ALL, render: (p) => <MaxBars {...p} /> },
   { id: 'temp-summary', span: 1, roles: ALL, render: (p) => <TempSummary {...p} /> },
   { id: 'equipment', span: 3, roles: ALL, render: (p) => <Equipment {...p} /> },
