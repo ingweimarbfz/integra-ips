@@ -252,7 +252,7 @@ input, select, textarea { font-family: inherit; }
 .table .actions { text-align: right; white-space: nowrap; }
 .cell-user { display: flex; align-items: center; gap: 10px; }
 .cell-user strong { display: block; color: var(--ink); font-weight: 600; }
-.cell-user span { font-size: 12px; color: var(--muted); }
+.cell-user span:not(.icon-bubble) { font-size: 12px; color: var(--muted); }
 .table-toolbar { display: flex; gap: 12px; align-items: center; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid var(--line-2); flex-wrap: wrap; }
 .table-toolbar .input-icon { width: min(320px, 100%); }
 .empty { padding: 40px 20px; text-align: center; color: var(--muted); }
@@ -396,7 +396,7 @@ input, select, textarea { font-family: inherit; }
 .ev-add > input:not([type=number]) { flex: 1 1 160px; }
 .person-found { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border: 1px solid var(--ok); background: var(--ok-50); border-radius: var(--radius-sm); }
 .person-found strong { display: block; font-size: 13.5px; }
-.person-found span { display: block; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.person-found span:not(.icon-bubble):not(.badge) { display: block; font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dot.pulse { animation: pulse 1.6s ease-in-out infinite; }
 @keyframes pulse { 50% { opacity: .35 } }
 .stock-bar { height: 6px; border-radius: 99px; background: var(--line-2); overflow: hidden; min-width: 80px; }
@@ -504,7 +504,7 @@ input, select, textarea { font-family: inherit; }
   .services { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .vehicle-grid { grid-template-columns: minmax(0, 1fr); }
   .rc-checks { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-  .person-found span { white-space: normal; }
+  .person-found span:not(.icon-bubble) { white-space: normal; }
   .km-big { font-size: 22px; }
   .toast { left: 12px; right: 12px; bottom: 12px; max-width: none; }
   .cy-toolbar { flex-wrap: wrap; padding: 0 4px; }
@@ -1094,3 +1094,13 @@ a.th-std:hover { box-shadow: var(--shadow-lg, 0 6px 18px rgba(0,0,0,.08)); }
 .module-switch.inline button { height: 32px; padding: 0 12px; font-size: 12.5px; }
 .form-grid > .span-2 { grid-column: span 2; }
 @media (max-width: 640px) { .form-grid > .span-2 { grid-column: 1 / -1; } }
+
+/* IIPS-036 · Kits: dotación por compartimientos. */
+.kit-tools { display: flex; gap: 12px; flex-wrap: wrap; }
+.kit-comp { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+.kit-comp-head { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: var(--line-2); font-size: 13px; }
+.kit-comp-head span { color: var(--muted); font-size: 12px; margin-right: auto; }
+.kit-comp .table { margin: 0; }
+.kit-summary { display: flex; gap: 14px; flex-wrap: wrap; font-size: 13px; color: var(--muted); }
+.kit-summary b { color: var(--ink); }
+.kit-summary .warn-text, .kit-summary .warn-text b { color: var(--warn); }

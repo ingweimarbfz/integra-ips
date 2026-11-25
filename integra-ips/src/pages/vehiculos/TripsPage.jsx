@@ -149,6 +149,10 @@ export const NewTripModal = ({ onClose, transferOnly = false, plannedInitial }) 
 // ---------------------------------------------------------------- Cerrar actividad
 export const CloseTripModal = ({ trip, onClose, onClosed }) => {
   const [f, setF] = useState({ kmIn: '', observation: trip.observation || '', fuel: false, fuelValue: '', fuelGallons: '', endedAt: '' })
+  const { user } = useAuth()
+  // IIPS-036: el cierre es del conductor; el administrador solo con motivo.
+  const adminClose = user.role === 'administrador' && trip.driver?.id !== user.id
+  const [adminReason, setAdminReason] = useState('')
   const [tach, setTach] = useState(null)
   const [ticket, setTicket] = useState(null)
   const [error, setError] = useState('')
@@ -165,7 +169,7 @@ export const CloseTripModal = ({ trip, onClose, onClosed }) => {
     setSaving(true)
     try {
       const { data } = await api.post(`/vehiculos-reportes/${trip.id}/cerrar`, {
-        kmIn: Number(f.kmIn), tachometerImage: tach, observation: f.observation, endedAt: f.endedAt || undefined,
+        kmIn: Number(f.kmIn), tachometerImage: tach, observation: f.observation, endedAt: f.endedAt || undefined, adminReason: adminClose ? adminReason : undefined,
         fuelValue: f.fuel ? Number(f.fuelValue) : null, fuelGallons: f.fuel && f.fuelGallons ? Number(f.fuelGallons) : null, fuelTicketImage: f.fuel ? ticket : null
       })
       onClosed(data)
@@ -193,6 +197,8 @@ export const CloseTripModal = ({ trip, onClose, onClosed }) => {
             <PhotoField label="Foto del ticket" required value={ticket} onChange={setTicket} />
           </>
         )}
+        {adminClose && <div className="alert warn" style={{ margin: 0 }}><MdFlag /><div style={{ flex: 1 }}><b>El cierre normalmente lo hace el conductor.</b> Si lo cierras como administrador (por ejemplo, el conductor no tiene acceso), indica el motivo; quedará en el reporte.
+          <input value={adminReason} onChange={(e) => setAdminReason(e.target.value)} placeholder="Motivo del cierre por administración" style={{ width: '100%', marginTop: 8 }} /></div></div>}
         <ManualDateTime value={f.endedAt} onChange={(v) => setF({ ...f, endedAt: v })} label="Fecha y hora de llegada" min={toLocalInput(trip.startedAt)} />
         <div className="alert info"><MdAccessTime /><span>El km de llegada pasa a ser el km actual de la móvil.</span></div>
         {error && <div className="alert bad"><MdErrorOutline /><span>{error}</span></div>}

@@ -29,6 +29,15 @@ const Kpi = ({ label, value, foot, icon, tone = '' }) => (
   <div className="card kpi"><div className="kpi-top"><span className="kpi-label">{label}</span><span className={`kpi-icon ${tone}`}>{icon}</span></div><div className="kpi-value" style={{ fontSize: 24 }}>{value ?? '—'}</div>{foot && <div className="kpi-foot">{foot}</div>}</div>
 )
 
+// IIPS-036 · Personas del área elegida (miembros y encargado); si el área no tiene personas asignadas, todos.
+const areaHasPeople = (cat, areaId) => { const a = cat?.areas.find((x) => String(x.id) === String(areaId)); return Boolean(a && (a.memberIds?.length || a.managerUserId)) }
+const peopleOf = (cat, areaId) => {
+  const a = cat?.areas.find((x) => String(x.id) === String(areaId))
+  if (!a || !areaHasPeople(cat, areaId)) return cat?.users || []
+  const ids = new Set([...(a.memberIds || []), a.managerUserId].filter(Boolean))
+  return (cat.users || []).filter((u) => ids.has(u.id))
+}
+
 // Adjuntar fotos (cámara del celular) o escaneos (PDF).
 const FilesPicker = ({ files, onChange }) => {
   const add = async (list) => {
@@ -92,8 +101,9 @@ export const CorrNew = () => {
           <div className="field"><label>Fecha y hora de recibido</label><input type="datetime-local" value={f.receivedAt} onChange={set('receivedAt')} /><span className="hint">Vacío = ahora.</span></div>
           <div className="field span-2"><label>Anexos</label><input value={f.attachmentsDesc} onChange={set('attachmentsDesc')} placeholder="Ej. 1 CD, 2 copias de cédula" /></div>
           <h4 className="span-all" style={{ margin: '6px 0 0' }}>Dirigido a</h4>
-          <div className="field"><label>Área <span className="req">*</span></label><select value={f.areaId} onChange={set('areaId')}><option value="">Selecciona…</option>{cat.areas.filter((a) => a.active).map((a) => <option key={a.id} value={a.id}>{a.name} ({a.prefix})</option>)}</select></div>
-          <div className="field"><label>Persona</label><select value={f.recipientUserId} onChange={set('recipientUserId')}><option value="">El encargado del área</option>{cat.users.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</select></div>
+          <div className="field"><label>Área <span className="req">*</span></label><select value={f.areaId} onChange={(e) => setF({ ...f, areaId: e.target.value, recipientUserId: '' })}><option value="">Selecciona…</option>{cat.areas.filter((a) => a.active).map((a) => <option key={a.id} value={a.id}>{a.name} ({a.prefix})</option>)}</select></div>
+          <div className="field"><label>Persona</label><select value={f.recipientUserId} onChange={set('recipientUserId')} disabled={!f.areaId}><option value="">{f.areaId ? 'El encargado del área' : 'Elige primero el área'}</option>{peopleOf(cat, f.areaId).map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</select>
+            {f.areaId && !areaHasPeople(cat, f.areaId) && <span className="hint">Esta área aún no tiene personas asignadas: se muestran todos. Asígnalas en Áreas y consecutivos.</span>}</div>
           <div className="field span-all"><label className="switch"><input type="checkbox" checked={f.requiresResponse} onChange={set('requiresResponse')} /> Requiere respuesta (con plazo)</label></div>
           {f.requiresResponse && <>
             <div className="field"><label>Término</label><select value={f.responseType} onChange={set('responseType')}>{Object.entries(cat.responseTypes).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
@@ -265,8 +275,8 @@ export const CorrDetail = () => {
       {modal === 'reasignar' && cat && (
         <Modal title="Reasignar" size="sm" onClose={() => setModal(null)} footer={<><button type="button" className="btn btn-outline" onClick={() => setModal(null)}>Cancelar</button><button type="button" className="btn btn-primary" onClick={() => act(() => api.post(`/correspondencia/${c.id}/reasignar`, form), 'Reasignado')}><MdSwapHoriz /> Reasignar</button></>}>
           <div className="stack" style={{ gap: 12 }}>
-            <div className="field"><label>Área</label><select value={form.areaId || c.area?.id || ''} onChange={(e) => setForm({ ...form, areaId: e.target.value })}>{cat.areas.filter((a) => a.active).map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select></div>
-            {cat.users.length > 0 && <div className="field"><label>Persona</label><select value={form.userId || ''} onChange={(e) => setForm({ ...form, userId: e.target.value })}><option value="">El encargado del área</option>{cat.users.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</select></div>}
+            <div className="field"><label>Área</label><select value={form.areaId || c.area?.id || ''} onChange={(e) => setForm({ ...form, areaId: e.target.value, userId: '' })}>{cat.areas.filter((a) => a.active).map((a) => <option key={a.id} value={a.id}>{a.name}</option>)}</select></div>
+            {cat.users.length > 0 && <div className="field"><label>Persona</label><select value={form.userId || ''} onChange={(e) => setForm({ ...form, userId: e.target.value })}><option value="">El encargado del área</option>{peopleOf(cat, form.areaId || c.area?.id).map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</select></div>}
             <div className="field"><label>Motivo *</label><textarea rows={2} value={form.note || ''} onChange={(e) => setForm({ ...form, note: e.target.value })} /></div>
           </div>
         </Modal>
@@ -318,6 +328,7 @@ export const CorrAreas = () => {
   const [toast, toastNode] = useToast()
   const [d, setD] = useState(null)
   const [f, setF] = useState({ name: '', prefix: '' })
+  const [members, setMembers] = useState(null)
   const load = () => api.get('/correspondencia/catalogos', { noCache: true }).then(({ data }) => { catCache = data; setD(data) }).catch(() => {})
   useEffect(() => { load() }, [])
   const save = async (fn, msg) => { try { await fn(); toast(msg); load() } catch (e) { toast(errorMessage(e), 'bad') } }
@@ -327,9 +338,10 @@ export const CorrAreas = () => {
     <>
       <PageHead title="Áreas de correspondencia" subtitle="Cada área tiene su prefijo para el consecutivo (ENT-TH-2026-0001) y un encargado que recibe lo que no va a una persona." />
       <Card flush>
-        <div className="table-wrap"><table className="table"><thead><tr><th>Área</th><th>Prefijo</th><th>Encargado</th><th>Activa</th></tr></thead>
+        <div className="table-wrap"><table className="table"><thead><tr><th>Área</th><th>Prefijo</th><th>Encargado</th><th>Personas del área</th><th>Activa</th></tr></thead>
           <tbody>{d.areas.map((a) => <tr key={a.id}><td>{a.name}</td><td><b>{a.prefix}</b></td>
             <td><select value={a.managerUserId || ''} onChange={(e) => save(() => api.put(`/correspondencia/areas/${a.id}`, { managerUserId: e.target.value }), 'Encargado actualizado')}><option value="">Sin encargado</option>{users.map((u) => <option key={u.id} value={u.id}>{u.name}</option>)}</select></td>
+            <td><button type="button" className="btn btn-outline btn-sm" onClick={() => setMembers({ area: a, ids: new Set(a.memberIds || []) })}>{a.memberIds?.length ? `${a.memberIds.length} persona(s)` : 'Asignar personas'}</button></td>
             <td><label className="switch"><input type="checkbox" checked={a.active} onChange={(e) => save(() => api.put(`/correspondencia/areas/${a.id}`, { active: e.target.checked }), 'Área actualizada')} /></label></td></tr>)}</tbody></table></div>
       </Card>
       <div style={{ marginTop: 16 }}><Card title="Nueva área">
@@ -339,6 +351,14 @@ export const CorrAreas = () => {
           <button type="button" className="btn btn-primary" onClick={() => save(() => api.post('/correspondencia/areas', f), 'Área creada').then(() => setF({ name: '', prefix: '' }))}><MdAdd /> Agregar</button>
         </div>
       </Card></div>
+      {members && (
+        <Modal title={`Personas de ${members.area.name}`} onClose={() => setMembers(null)} footer={<><button type="button" className="btn btn-outline" onClick={() => setMembers(null)}>Cancelar</button><button type="button" className="btn btn-primary" onClick={() => save(() => api.put(`/correspondencia/areas/${members.area.id}/miembros`, { userIds: [...members.ids] }), 'Personas del área guardadas').then(() => setMembers(null))}><MdSave /> Guardar</button></>}>
+          <p className="hint" style={{ marginTop: 0 }}>Al radicar para esta área solo se ofrecerán estas personas (y el encargado).</p>
+          <div className="stack" style={{ gap: 4, maxHeight: 380, overflowY: 'auto' }}>
+            {users.map((u) => <label key={u.id} className={`rc-check${members.ids.has(u.id) ? ' on' : ''}`}><input type="checkbox" checked={members.ids.has(u.id)} onChange={(e) => { const ids = new Set(members.ids); if (e.target.checked) ids.add(u.id); else ids.delete(u.id); setMembers({ ...members, ids }) }} /> {u.name}</label>)}
+          </div>
+        </Modal>
+      )}
       {toastNode}
     </>
   )

@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { MdBeachAccess, MdAdd, MdDelete, MdErrorOutline, MdSave, MdInfoOutline } from 'react-icons/md'
+import { MdBeachAccess, MdAdd, MdDelete, MdErrorOutline, MdSave, MdInfoOutline, MdSend, MdCheck, MdEventRepeat } from 'react-icons/md'
 import api, { errorMessage } from '../../api/client'
 import { PageHead, Card, Modal, Empty, Spinner, useToast } from '../../components/ui'
 import { fmt, thBase, thScope, THSCOPE_LABEL } from './common'
@@ -80,6 +80,129 @@ export const VacationCard = ({ staffId, initial, readOnly }) => {
   )
 }
 
+
+const REQ_BADGE = { pendiente: 'warn', aprobada: 'ok', reprogramada: 'ok', rechazada: 'bad', cancelada: '' }
+
+// IIPS-036 · El empleado solicita sus vacaciones dentro de los días disponibles.
+const RequestForm = ({ available, onClose, onSaved }) => {
+  const [f, setF] = useState({ startDate: '', businessDays: Math.min(15, Math.floor(available)) || 1, notes: '' })
+  const [calc, setCalc] = useState(null)
+  const [error, setError] = useState(''); const [saving, setSaving] = useState(false)
+  useEffect(() => {
+    setCalc(null)
+    if (!f.startDate || !(Number(f.businessDays) > 0)) return
+    api.get('/mis-vacaciones/calcular', { params: { inicio: f.startDate, dias: f.businessDays } }).then(({ data }) => setCalc(data)).catch(() => {})
+  }, [f.startDate, f.businessDays])
+  const over = Number(f.businessDays) > available
+  const submit = async () => {
+    setError('')
+    if (!f.startDate) return setError('Indica desde cuándo quieres salir.')
+    setSaving(true)
+    try { await api.post('/mis-vacaciones/solicitudes', { ...f, businessDays: Number(f.businessDays) }); onSaved() } catch (e) { setError(errorMessage(e)); setSaving(false) }
+  }
+  return (
+    <Modal title="Solicitar vacaciones" size="sm" onClose={onClose}
+      footer={<><button type="button" className="btn btn-outline" onClick={onClose}>Cancelar</button><button type="button" className="btn btn-primary" onClick={submit} disabled={saving || over}>{saving ? <Spinner /> : <MdSend />} Enviar solicitud</button></>}>
+      <div className="stack" style={{ gap: 12 }}>
+        <div className="alert info" style={{ margin: 0 }}><MdInfoOutline /><span>Puedes pedir hasta <b>{days(available)} hábiles</b>. Talento humano la aprueba, la rechaza o te propone otras fechas.</span></div>
+        <div className="grid grid-2" style={{ gap: 12 }}>
+          <div className="field"><label>Salgo a vacaciones</label><input type="date" min={new Date().toISOString().slice(0, 10)} value={f.startDate} onChange={(e) => setF({ ...f, startDate: e.target.value })} /></div>
+          <div className="field"><label>Días hábiles</label><input type="number" min="1" max={Math.floor(available)} step="1" value={f.businessDays} onChange={(e) => setF({ ...f, businessDays: e.target.value })} /></div>
+        </div>
+        {over && <div className="alert bad" style={{ margin: 0 }}><MdErrorOutline /><span>Superas tus días disponibles.</span></div>}
+        {calc && !over && <div className="alert info" style={{ margin: 0 }}><MdInfoOutline /><span>Último día: <b>{fmt(calc.end)}</b>. Regresas el <b>{fmt(calc.returnDate)}</b> (lunes a viernes sin festivos).</span></div>}
+        <div className="field"><label>Comentario (opcional)</label><input value={f.notes} onChange={(e) => setF({ ...f, notes: e.target.value })} placeholder="Ej. viaje familiar" /></div>
+        {error && <div className="alert bad"><MdErrorOutline /><span>{error}</span></div>}
+      </div>
+    </Modal>
+  )
+}
+
+// Tarjeta "Mis solicitudes de vacaciones" (Mi hoja de vida).
+export const MyVacationRequests = ({ vacation }) => {
+  const [toast, toastNode] = useToast()
+  const [list, setList] = useState(null)
+  const [asking, setAsking] = useState(false)
+  const load = useCallback(() => api.get('/mis-vacaciones/solicitudes', { noCache: true }).then(({ data }) => setList(data)).catch(() => setList([])), [])
+  useEffect(() => { load() }, [load])
+  if (!vacation?.applies) return null
+  const pending = (list || []).filter((r) => r.status === 'pendiente').reduce((a, r) => a + r.businessDays, 0)
+  const available = Math.max(0, Math.floor((vacation.balance - pending) * 10) / 10)
+  const cancel = async (id) => { try { await api.post(`/mis-vacaciones/solicitudes/${id}/cancelar`); toast('Solicitud cancelada'); load() } catch (e) { toast(errorMessage(e), 'bad') } }
+  return (
+    <Card title="Mis solicitudes de vacaciones" subtitle={`Disponibles para solicitar: ${days(available)}${pending ? ` (${days(pending)} en trámite)` : ''}`} icon={<MdSend style={{ color: 'var(--brand)' }} />}
+      actions={<button type="button" className="btn btn-primary btn-sm" disabled={available < 1} onClick={() => setAsking(true)}><MdAdd /> Solicitar</button>}>
+      {!list ? <Spinner /> : list.length === 0 ? <p style={{ margin: 0, color: 'var(--muted)' }}>Aún no has solicitado vacaciones.</p> : (
+        <ul className="list">{list.map((r) => (
+          <li key={r.id}><div className="grow"><strong>{fmt(r.startDate)} al {fmt(r.endDate)} · {days(r.businessDays)}</strong>
+            <span><span className={`badge ${REQ_BADGE[r.status]}`}>{r.statusLabel}</span>{r.responseNote ? ` ${r.responseNote}` : ''}{r.decidedBy ? ` · ${r.decidedBy}` : ''}</span></div>
+            {r.status === 'pendiente' && <button type="button" className="btn btn-ghost btn-sm" onClick={() => cancel(r.id)}>Cancelar</button>}</li>
+        ))}</ul>
+      )}
+      {asking && <RequestForm available={available} onClose={() => setAsking(false)} onSaved={() => { setAsking(false); toast('Solicitud enviada a talento humano'); load() }} />}
+      {toastNode}
+    </Card>
+  )
+}
+
+// Talento humano responde una solicitud: aprobar, rechazar o reprogramar.
+const DecideModal = ({ r, onClose, onDone }) => {
+  const [action, setAction] = useState('aprobar')
+  const [f, setF] = useState({ startDate: r.startDate, businessDays: r.businessDays, note: '' })
+  const [error, setError] = useState(''); const [saving, setSaving] = useState(false)
+  const submit = async () => {
+    setError(''); setSaving(true)
+    try { await api.post(`/estandares/th/vacaciones/solicitudes/${r.id}/decidir`, { action, ...f, businessDays: Number(f.businessDays) }); onDone() } catch (e) { setError(errorMessage(e)); setSaving(false) }
+  }
+  return (
+    <Modal title={`Solicitud de ${r.staffName}`} size="sm" onClose={onClose}
+      footer={<><button type="button" className="btn btn-outline" onClick={onClose}>Cancelar</button><button type="button" className={`btn ${action === 'rechazar' ? 'btn-danger' : 'btn-primary'}`} onClick={submit} disabled={saving}>{saving ? <Spinner /> : <MdSave />} Confirmar</button></>}>
+      <div className="stack" style={{ gap: 12 }}>
+        <p style={{ margin: 0 }}>Pide <b>{days(r.businessDays)}</b> del {fmt(r.startDate)} al {fmt(r.endDate)}.{r.notes ? ` “${r.notes}”` : ''}</p>
+        <div className="module-switch inline">
+          {[['aprobar', 'Aprobar'], ['reprogramar', 'Reprogramar'], ['rechazar', 'Rechazar']].map(([k, l]) => <button key={k} type="button" className={action === k ? 'on' : ''} onClick={() => setAction(k)}>{l}</button>)}
+        </div>
+        {action === 'reprogramar' && (
+          <div className="grid grid-2" style={{ gap: 12 }}>
+            <div className="field"><label>Nueva fecha de salida</label><input type="date" value={f.startDate} onChange={(e) => setF({ ...f, startDate: e.target.value })} /></div>
+            <div className="field"><label>Días hábiles</label><input type="number" min="1" value={f.businessDays} onChange={(e) => setF({ ...f, businessDays: e.target.value })} /></div>
+          </div>
+        )}
+        <div className="field"><label>{action === 'aprobar' ? 'Nota (opcional)' : action === 'rechazar' ? 'Motivo del rechazo' : 'Motivo de la reprogramación'}</label><input value={f.note} onChange={(e) => setF({ ...f, note: e.target.value })} /></div>
+        {action !== 'rechazar' && <span className="hint">Al aprobar se registran como disfrute y se descuentan del saldo.</span>}
+        {error && <div className="alert bad"><MdErrorOutline /><span>{error}</span></div>}
+      </div>
+    </Modal>
+  )
+}
+
+const RequestsPanel = ({ onChanged }) => {
+  const [toast, toastNode] = useToast()
+  const [list, setList] = useState(null)
+  const [status, setStatus] = useState('pendiente')
+  const [deciding, setDeciding] = useState(null)
+  const load = useCallback(() => api.get('/estandares/th/vacaciones/solicitudes', { params: { ambito: thScope(), estado: status === 'todas' ? undefined : status }, noCache: true }).then(({ data }) => setList(data)).catch(() => setList([])), [status])
+  useEffect(() => { load() }, [load])
+  return (
+    <Card flush title="Solicitudes de vacaciones" icon={<MdEventRepeat style={{ color: 'var(--brand)' }} />}
+      actions={<div className="module-switch inline">{[['pendiente', 'Pendientes'], ['todas', 'Todas']].map(([k, l]) => <button key={k} type="button" className={status === k ? 'on' : ''} onClick={() => setStatus(k)}>{l}</button>)}</div>}>
+      {!list ? <div style={{ padding: 16 }}><Spinner /></div> : list.length === 0 ? <Empty icon={<MdEventRepeat />}>{status === 'pendiente' ? 'No hay solicitudes por responder.' : 'Sin solicitudes.'}</Empty> : (
+        <div className="table-wrap"><table className="table">
+          <thead><tr><th>Persona</th><th>Desde</th><th>Hasta</th><th className="num">Días</th><th>Estado</th><th className="actions" /></tr></thead>
+          <tbody>{list.map((r) => (
+            <tr key={r.id}><td><strong style={{ color: 'var(--ink)' }}>{r.staffName}</strong><div style={{ fontSize: 11.5, color: 'var(--muted)' }}>{r.positionName || ''}{r.notes ? ` · ${r.notes}` : ''}</div></td>
+              <td>{fmt(r.startDate)}</td><td>{fmt(r.endDate)}</td><td className="num">{r.businessDays}</td>
+              <td><span className={`badge ${REQ_BADGE[r.status]}`}>{r.statusLabel}</span>{r.responseNote ? <div style={{ fontSize: 11.5, color: 'var(--muted)' }}>{r.responseNote}</div> : null}</td>
+              <td className="actions">{r.status === 'pendiente' && <button type="button" className="btn btn-outline btn-sm" onClick={() => setDeciding(r)}><MdCheck /> Responder</button>}</td></tr>
+          ))}</tbody>
+        </table></div>
+      )}
+      {deciding && <DecideModal r={deciding} onClose={() => setDeciding(null)} onDone={() => { setDeciding(null); toast('Solicitud respondida'); load(); onChanged?.() }} />}
+      {toastNode}
+    </Card>
+  )
+}
+
 // Tablero de vacaciones del ámbito (IPS u otras dependencias).
 export const VacationsPage = () => {
   const navigate = useNavigate()
@@ -97,6 +220,7 @@ export const VacationsPage = () => {
         {[['pendientes', 'Con vacaciones pendientes o próximas'], ['todos', 'Todos'], ['no_aplica', 'Sin derecho (OPS, prácticas…)']].map(([k, l]) => <button key={k} type="button" className={only === k ? 'on' : ''} onClick={() => setOnly(k)}>{l}</button>)}
       </div>
       {error && <div className="alert bad"><MdErrorOutline /><span>{error}</span></div>}
+      <div style={{ marginBottom: 16 }}><RequestsPanel onChanged={load} /></div>
       <Card flush>
         {!rows ? <div className="splash" style={{ minHeight: 160 }}><Spinner /></div> : list.length === 0 ? <Empty icon={<MdBeachAccess />}>Nadie en este filtro.</Empty> : (
           <div className="table-wrap"><table className="table">

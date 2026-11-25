@@ -122,7 +122,7 @@ const SHARED = [
   },
   {
     title: 'Cuenta',
-    items: [{ to: '/perfil', label: 'Mi perfil', icon: MdPerson, roles: EVERYONE }, { to: '/mi-hoja-de-vida', label: 'Mi hoja de vida', icon: MdContactPage, roles: ['administrador', 'empleado', 'conductor', 'voluntario', 'docente'] }, { to: '/firma', label: 'Mi firma digital', icon: MdDraw, roles: EVERYONE }, { to: '/correspondencia/bandeja', label: 'Mi correspondencia', icon: MdInbox, roles: ['administrador', 'empleado', 'conductor', 'voluntario', 'docente'] }, { to: '/mis-notificaciones', label: 'Mis notificaciones', icon: MdNotificationsActive, roles: EVERYONE }]
+    items: [{ to: '/perfil', label: 'Mi perfil', icon: MdPerson, roles: EVERYONE }, { to: '/mi-hoja-de-vida', label: 'Mi hoja de vida', icon: MdContactPage, roles: ['administrador', 'empleado', 'conductor', 'voluntario', 'docente'] }, { to: '/firmas-pendientes', label: 'Documentos por firmar', icon: MdFactCheck, roles: ['administrador', 'empleado', 'conductor', 'voluntario', 'docente'] }, { to: '/firma', label: 'Mi firma digital', icon: MdDraw, roles: EVERYONE }, { to: '/correspondencia/bandeja', label: 'Mi correspondencia', icon: MdInbox, roles: ['administrador', 'empleado', 'conductor', 'voluntario', 'docente'] }, { to: '/mis-notificaciones', label: 'Mis notificaciones', icon: MdNotificationsActive, roles: EVERYONE }]
   }
 ]
 
