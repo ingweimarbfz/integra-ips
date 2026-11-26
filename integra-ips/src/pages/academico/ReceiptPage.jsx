@@ -57,7 +57,7 @@ const ReceiptPage = () => {
         <div className="cy-patient-band">
           <div><span className="cy-field-label">Recibimos de</span><b className="cy-patient-name">{r.student?.fullName}</b><span>{r.student?.docType} {r.student?.docNumber}</span></div>
           <div><span className="cy-field-label">Valor</span><b className="cy-patient-name">{formatMoney(r.amount)}</b></div>
-          <div><span className="cy-field-label">Medio de pago</span><b>{r.methodLabel}</b>{r.reference && <span>Ref. {r.reference}</span>}</div>
+          <div><span className="cy-field-label">Medio de pago</span><b>{r.methodLabel}</b>{r.reference && <span>Ref. {r.reference}</span>}{r.externalInvoice && <span>Factura N° {r.externalInvoice}</span>}</div>
         </div>
         <section className="cy-section">
           <h3 className="cy-section-title">La suma de</h3>
