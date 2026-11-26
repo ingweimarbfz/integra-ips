@@ -17,7 +17,7 @@ const today = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota
 const STATUS = { por_facturar: ['Por facturar', 'warn'], no_aplica: ['Pagado en caja', 'ok'], pendiente: ['Pendiente cuenta de cobro', 'warn'], cobrada: ['En cuenta de cobro', 'navy'], pagada: ['Pagado por la EPS', 'ok'], anulada: ['Anulada', ''] }
 const DOC_SHORT = { 'Cédula de ciudadanía': 'CC', 'Tarjeta de identidad': 'TI', 'Cédula de extranjería': 'CE', Pasaporte: 'PA', 'Registro civil': 'RC', NIT: 'NIT' }
 const docLabel = (r) => (r.docNumber ? `${DOC_SHORT[r.docType] || r.docType || ''} ${r.docNumber}`.trim() : r.documento)
-const KIND_SHORT = { aseguradora: 'aseguradora', clinica: 'clínica', hospital_publico: 'hospital público', ips: 'IPS', empresa_publica: 'entidad pública', empresa_privada: 'empresa', otra: 'institución' }
+const KIND_SHORT = { aseguradora: 'aseguradora', clinica: 'clínica', hospital_publico: 'hospital público', ente_territorial: 'ente territorial', ips: 'IPS', empresa_publica: 'entidad pública', empresa_privada: 'empresa', otra: 'institución' }
 const discLabel = (d) => (d.type === 'porcentaje' ? `${d.value}%` : formatMoney(d.value))
 
 // Ítems del tarifario del servicio: se eligen con cantidad; el valor sale del tarifario.

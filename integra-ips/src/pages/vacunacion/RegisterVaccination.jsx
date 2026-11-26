@@ -50,6 +50,12 @@ const RegisterVaccination = () => {
     setF((x) => ({ ...x, vaccineId: e.target.value, doseLabel: '', itemId: v?.lots[0] ? String(v.lots[0].itemId) : '' }))
   }
   const needsInvoice = vaccine && !vaccine.pai && form?.billingOn
+  // IIPS-039 · A quién se cobra la aplicación de una vacuna PAI (EPS del afiliado o ente territorial).
+  const [paiPayer, setPaiPayer] = useState(null)
+  useEffect(() => {
+    if (!vaccine?.pai || !form?.billingOn) return setPaiPayer(null)
+    api.get('/vacunacion/pagador-pai', { params: { eps: f.epsId || undefined, regimen: f.regimen || undefined } }).then(({ data }) => setPaiPayer(data)).catch(() => setPaiPayer(null))
+  }, [vaccine?.pai, form?.billingOn, f.epsId, f.regimen])
   const save = async (e) => {
     e.preventDefault(); setErr(''); setOk(null)
     if (!f.docNumber || !f.names || !f.birthDate) return setErr('Completa documento, nombres y fecha de nacimiento.')
@@ -71,7 +77,7 @@ const RegisterVaccination = () => {
       <PageHead title="Registrar vacunación" subtitle="Registro nominal de la dosis: descuenta el biológico del inventario y programa la siguiente dosis">
         <button type="submit" className="btn btn-primary" disabled={busy}>{busy ? <Spinner /> : <MdSave />} Registrar vacunación</button>
       </PageHead>
-      {ok && <div className="alert ok" style={{ marginBottom: 16 }}><MdCheckCircle /><span><b>Vacuna registrada:</b> {ok.vaccine} · {ok.dose} · lote {ok.lot || '—'} a {ok.patient}.{ok.nextDoseDate ? ` Próxima dosis (${ok.nextDoseLabel}): ${fmt(ok.nextDoseDate)}.` : ' Esquema completo para este biológico.'} {ok.billed ? ` Aplicación facturada a ${ok.billed.eps} (${ok.billed.invoice}) para la cuenta de cobro.` : ''} <Link to={`/vacunacion/carne/${ok.docNumber}`}>Ver carnet</Link>{ok.warning ? ` · ${ok.warning}` : ''}</span></div>}
+      {ok && <div className="alert ok" style={{ marginBottom: 16 }}><MdCheckCircle /><span><b>Vacuna registrada:</b> {ok.vaccine} · {ok.dose} · lote {ok.lot || '—'} a {ok.patient}.{ok.nextDoseDate ? ` Próxima dosis (${ok.nextDoseLabel}): ${fmt(ok.nextDoseDate)}.` : ' Esquema completo para este biológico.'} {ok.billed ? (ok.billed.pending ? ` Aplicación por facturar a ${ok.billed.payer} (${ok.billed.reason}).` : ` Aplicación facturada a ${ok.billed.payer || ok.billed.eps} (${ok.billed.invoice}) para la cuenta de cobro.`) : ''} <Link to={`/vacunacion/carne/${ok.docNumber}`}>Ver carnet</Link>{ok.warning ? ` · ${ok.warning}` : ''}</span></div>}
       {err && <div className="alert bad" style={{ marginBottom: 16 }}><MdErrorOutline /><span>{err}</span></div>}
       <div className="stack">
         <Card title="Biológico" icon={<MdVaccines style={{ color: 'var(--brand)' }} />}>
@@ -108,10 +114,16 @@ const RegisterVaccination = () => {
           )}
         </Card>
         {needsInvoice && <InvoicePicker inv={inv} serviceLabel="la vacuna" patientLabel="el paciente" />}
-        {vaccine && vaccine.pai && vaccine.tariffId && form.billingOn && (() => { const e = eps.find((x) => String(x.id) === String(f.epsId)); return e && e.agreementActive && e.paymentMode === 'cuenta_cobro' ? <div className="alert info" style={{ margin: 0 }}><MdInfoOutline /><span>Biológico PAI gratuito. La aplicación se facturará a <b>{e.name}</b> para su cuenta de cobro ({formatMoney(vaccine.tariffPrice)}, sin copago por ser promoción y prevención).</span></div> : null })()}
+        {vaccine && vaccine.pai && form.billingOn && paiPayer && (
+          <div className={`alert ${paiPayer.payer && vaccine.tariffId ? 'info' : 'warn'}`} style={{ margin: 0 }}><MdInfoOutline /><span>
+            Biológico PAI: gratis para el paciente (sin copago ni cuota moderadora). {!vaccine.tariffId ? 'Configura el ítem del tarifario de la aplicación en Biológicos para poder facturarla.' : paiPayer.payer
+              ? <>La aplicación ({formatMoney(vaccine.tariffPrice)}) se factura a <b>{paiPayer.payer.name}</b> ({paiPayer.payer.reason}){paiPayer.payer.agreement ? ' por cuenta de cobro, al guardar.' : '. Sin convenio vigente: queda por facturar en Servicios facturables.'}</>
+              : 'Registra la EPS del paciente o crea el ente territorial (Secretaría de Salud) en Proveedores y convenios para facturar la aplicación.'}
+          </span></div>
+        )}
         {vaccine && !form.billingOn && (
           <Card title="Factura" subtitle="La facturación se lleva en otro sistema: escribe el N° de la factura para dejar la relación (opcional).">
-            <div className="field" style={{ maxWidth: 360 }}><label>Factura N°</label><input value={f.externalInvoice} onChange={set('externalInvoice')} maxLength={40} placeholder={vaccine.pai ? 'Si aplica' : 'N° de la factura en tu sistema'} /></div>
+            <div className="field" style={{ maxWidth: 360 }}><label>Factura N°</label><input value={f.externalInvoice} onChange={set('externalInvoice')} maxLength={40} placeholder={vaccine.pai ? 'Factura de la aplicación a la EPS o al ente territorial' : 'N° de la factura en tu sistema'} /></div>
           </Card>
         )}
         <Card title="Paciente" icon={<MdPerson style={{ color: 'var(--brand)' }} />} subtitle="Escribe el documento: si ya se vacunó antes, se cargan sus datos y su historial">
