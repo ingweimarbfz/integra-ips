@@ -6,12 +6,15 @@ import { useAuth } from '../../context/AuthContext'
 import { Modal, Spinner, useToast } from '../../components/ui'
 import { formatDate, formatMoney } from '../../utils/format'
 import { PAY_METHODS, AccountBadge, ContractBadge } from './common'
+import { inPlan } from '../../utils/permissions'
 
 const today = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Bogota' }).format(new Date())
 
 const PaymentForm = ({ enrollment, onClose, onSaved }) => {
+  const { user } = useAuth()
+  const billingOn = inPlan(user, 'facturacion')
   const acc = enrollment.account
-  const [f, setF] = useState({ amount: acc.nextDue ? acc.nextDue.balance : acc.balance, paidAt: today(), method: 'efectivo', reference: '', notes: '' })
+  const [f, setF] = useState({ amount: acc.nextDue ? acc.nextDue.balance : acc.balance, paidAt: today(), method: 'efectivo', reference: '', notes: '', externalInvoice: '' })
   const [error, setError] = useState(''); const [saving, setSaving] = useState(false)
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value })
   const submit = async (e) => {
@@ -31,6 +34,7 @@ const PaymentForm = ({ enrollment, onClose, onSaved }) => {
           <div className="field"><label>Fecha del pago</label><input type="date" max={today()} value={f.paidAt} onChange={set('paidAt')} /></div>
           <div className="field"><label>Medio de pago</label><select value={f.method} onChange={set('method')}>{Object.entries(PAY_METHODS).map(([k, l]) => <option key={k} value={k}>{l}</option>)}</select></div>
           <div className="field"><label>Referencia</label><input value={f.reference} onChange={set('reference')} placeholder="N.º de transacción o consignación" /></div>
+          {!billingOn && <div className="field span-all"><label>Factura N° (sistema externo)</label><input value={f.externalInvoice} onChange={set('externalInvoice')} maxLength={40} placeholder="N° de la factura de este pago o abono" /><span className="hint">La facturación se lleva en otro sistema: queda la relación con este recibo.</span></div>}
           <div className="field span-all"><label>Observaciones</label><input value={f.notes} onChange={set('notes')} /></div>
         </div>
         <span className="hint">El pago se aplica a las cuotas en orden de vencimiento.</span>
@@ -83,6 +87,7 @@ const VoidInvoiceForm = ({ enrollment: e, onClose, onSaved }) => {
 
 export const AccountView = ({ enrollment: e, onChange, readOnly = false, receiptBase = '/educacion/recibos', invoiceBase = '/educacion/facturas' }) => {
   const { user } = useAuth()
+  const billingOn = inPlan(user, 'facturacion')
   const admin = user?.role === 'administrador'
   const [toast, toastNode] = useToast()
   const [modal, setModal] = useState(null)
@@ -97,9 +102,9 @@ export const AccountView = ({ enrollment: e, onChange, readOnly = false, receipt
       <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
         {e.invoice?.number && <Link className="btn btn-outline btn-sm" to={`${invoiceBase}/${e.id}`}><MdRequestQuote /> Factura {e.invoice.number}</Link>}
         {!readOnly && e.invoice?.agreementNumber && <Link className="btn btn-outline btn-sm" to={`${invoiceBase}/${e.id}?tipo=convenio`}><MdRequestQuote /> Factura convenio {e.invoice.agreementNumber}</Link>}
-        {!readOnly && !e.invoice?.number && !e.invoice?.agreementNumber && ['matriculado', 'finalizado', 'aplazado'].includes(e.status) && (acc.total > 0 || e.agreementValue > 0) && <button type="button" className="btn btn-outline btn-sm" onClick={async () => { try { const { data } = await api.post(`/academico/matriculas/${e.id}/facturar`); onChange?.(data); toast('Matrícula facturada') } catch (err) { toast(errorMessage(err), 'bad') } }}><MdRequestQuote /> Facturar</button>}
+        {!readOnly && billingOn && !e.invoice?.number && !e.invoice?.agreementNumber && ['matriculado', 'finalizado', 'aplazado'].includes(e.status) && (acc.total > 0 || e.agreementValue > 0) && <button type="button" className="btn btn-outline btn-sm" onClick={async () => { try { const { data } = await api.post(`/academico/matriculas/${e.id}/facturar`); onChange?.(data); toast('Matrícula facturada') } catch (err) { toast(errorMessage(err), 'bad') } }}><MdRequestQuote /> Facturar</button>}
         {!readOnly && admin && (e.invoice?.number || e.invoice?.agreementNumber) && <button type="button" className="btn btn-ghost btn-sm" style={{ color: 'var(--bad)' }} onClick={() => setModal({ voidInvoice: true })}><MdBlock /> Anular factura</button>}
-        {!readOnly && !e.invoice?.number && e.status === 'preinscrito' && <span className="hint">Se factura al pasar a matriculado.</span>}
+        {!readOnly && billingOn && !e.invoice?.number && e.status === 'preinscrito' && <span className="hint">Se factura al pasar a matriculado.</span>}
       </div>
       {!readOnly && (
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', alignItems: 'center' }}>
@@ -125,7 +130,7 @@ export const AccountView = ({ enrollment: e, onChange, readOnly = false, receipt
               <tbody>{acc.payments.map((p) => (
                 <tr key={p.id} style={p.voided ? { opacity: 0.6 } : undefined}>
                   <td><b>N.º {p.receiptNumber}</b></td><td>{formatDate(p.paidAt)}</td>
-                  <td>{p.methodLabel}{p.reference && <div style={{ fontSize: 12, color: 'var(--muted)' }}>{p.reference}</div>}</td>
+                  <td>{p.methodLabel}{p.reference && <div style={{ fontSize: 12, color: 'var(--muted)' }}>{p.reference}</div>}{p.externalInvoice && <div style={{ fontSize: 12, color: 'var(--muted)' }}>Factura {p.externalInvoice}</div>}</td>
                   <td className="num" style={p.voided ? { textDecoration: 'line-through' } : undefined}>{formatMoney(p.amount)}</td>
                   <td>{p.voided ? <span className="badge bad" title={p.voidedReason}>Anulado</span> : <span className="badge ok">Vigente</span>}</td>
                   <td className="actions">

@@ -73,8 +73,9 @@ export const hasModule = (user, mod) => {
 }
 // ¿Puede ver una ruta o ítem del menú? roles del ítem + módulo habilitado + servicio de la sede.
 // grantable: si el usuario tiene el módulo, lo ve aunque su rol no esté en roles.
-export const canSee = (user, { roles, module, grantable = true, service } = {}) => {
+export const canSee = (user, { roles, module, grantable = true, service, plan } = {}) => {
   if (!user) return false
+  if (plan && !inPlan(user, plan)) return false
   if (module && !hasModule(user, module)) return false
   const roleOk = !roles || roles.includes(user.role) || (Boolean(module) && grantable && hasModule(user, module))
   return roleOk && (!service || siteHas(user, service))
@@ -295,7 +296,7 @@ const NAV = {
       { to: '/educacion/certificados', label: 'Certificados', icon: MdWorkspacePremiumIcon, roles: STAFF, module: 'edu_estudiantes' }
     ] },
     { title: 'Finanzas', items: [
-      { to: '/educacion/facturas', label: 'Facturas', icon: MdReceiptLong, roles: STAFF, module: 'edu_estudiantes', end: true },
+      { to: '/educacion/facturas', label: 'Facturas', icon: MdReceiptLong, roles: STAFF, module: 'edu_estudiantes', plan: 'facturacion', end: true },
       { to: '/educacion/cartera', label: 'Cartera', icon: MdAccountBalanceWallet, roles: STAFF, module: 'edu_estudiantes' },
       { to: '/educacion/convenios', label: 'Convenios', icon: MdHandshake, roles: STAFF, module: ['edu_estudiantes', 'edu_programas'] },
       { to: '/educacion/configuracion', label: 'Reglamento, planes de pago y descuentos', icon: MdTune, roles: ADMIN },

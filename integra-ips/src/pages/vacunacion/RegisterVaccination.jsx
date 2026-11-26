@@ -11,7 +11,7 @@ import './vacunacion.css'
 import { DocInput, PhoneInput } from '../../components/inputs'
 
 const fmt = (iso) => (iso ? iso.slice(0, 10).split('-').reverse().join('/') : '—')
-const EMPTY = { docType: 'Cédula de ciudadanía', docNumber: '', names: '', surnames: '', birthDate: '', sex: '', phone: '', email: '', address: '', municipality: '', epsId: '', regimen: '', populationGroup: 'Población general', ethnicity: '', vaccineId: '', doseLabel: '', itemId: '', vaccinatorId: '', modality: 'intramural', notes: '' }
+const EMPTY = { docType: 'Cédula de ciudadanía', docNumber: '', names: '', surnames: '', birthDate: '', sex: '', phone: '', email: '', address: '', municipality: '', epsId: '', regimen: '', populationGroup: 'Población general', ethnicity: '', vaccineId: '', doseLabel: '', itemId: '', vaccinatorId: '', modality: 'intramural', notes: '', externalInvoice: '' }
 const age = (birth, ref) => { if (!birth || !ref) return ''; const [by, bm, bd] = birth.split('-').map(Number); const [ry, rm, rd] = ref.split('-').map(Number); return ry - by - (rm < bm || (rm === bm && rd < bd) ? 1 : 0) }
 
 // Vacunación → Registrar: registro nominal de la dosis aplicada (descuenta inventario y programa la siguiente dosis).
@@ -109,7 +109,11 @@ const RegisterVaccination = () => {
         </Card>
         {needsInvoice && <InvoicePicker inv={inv} serviceLabel="la vacuna" patientLabel="el paciente" />}
         {vaccine && vaccine.pai && vaccine.tariffId && form.billingOn && (() => { const e = eps.find((x) => String(x.id) === String(f.epsId)); return e && e.agreementActive && e.paymentMode === 'cuenta_cobro' ? <div className="alert info" style={{ margin: 0 }}><MdInfoOutline /><span>Biológico PAI gratuito. La aplicación se facturará a <b>{e.name}</b> para su cuenta de cobro ({formatMoney(vaccine.tariffPrice)}, sin copago por ser promoción y prevención).</span></div> : null })()}
-        {vaccine && !vaccine.pai && !form.billingOn && <div className="alert info" style={{ margin: 0 }}><MdInfoOutline /><span>Tu plan no incluye facturación: cobra esta vacuna en caja.</span></div>}
+        {vaccine && !form.billingOn && (
+          <Card title="Factura" subtitle="La facturación se lleva en otro sistema: escribe el N° de la factura para dejar la relación (opcional).">
+            <div className="field" style={{ maxWidth: 360 }}><label>Factura N°</label><input value={f.externalInvoice} onChange={set('externalInvoice')} maxLength={40} placeholder={vaccine.pai ? 'Si aplica' : 'N° de la factura en tu sistema'} /></div>
+          </Card>
+        )}
         <Card title="Paciente" icon={<MdPerson style={{ color: 'var(--brand)' }} />} subtitle="Escribe el documento: si ya se vacunó antes, se cargan sus datos y su historial">
           <div className="form-grid">
             <div className="field"><label>Tipo de documento</label><select value={f.docType} onChange={set('docType')}>{tipoDocumento.map((t) => <option key={t.tipoDoc} value={t.tipoDoc}>{t.tipoDoc}</option>)}</select></div>

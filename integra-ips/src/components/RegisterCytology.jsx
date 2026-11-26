@@ -76,7 +76,9 @@ const RegisterCytology = () => {
           <div className="form-grid">
             <RO label="Fecha del examen" value={formatDate(d.fechaExamen)} hint="Fecha actual" />
             <RO label="N° lámina" value={defaults.siguienteLamina} hint="Se asigna al guardar" />
-            <RO label="Factura N°" value={invoice?.numFactura || (billingOn ? 'Elige la factura' : 'Por facturar')} hint={invoice ? 'Factura de la paciente' : 'Se toma de la factura'} />
+            {billingOn ? <RO label="Factura N°" value={invoice?.numFactura || 'Elige la factura'} hint={invoice ? 'Factura de la paciente' : 'Se toma de la factura'} /> : (
+              <div className="field"><label htmlFor="externalInvoice">Factura N°</label><input id="externalInvoice" name="externalInvoice" value={d.externalInvoice} onChange={handleChange} maxLength={40} placeholder="N° de la factura en tu sistema" /><span className="hint">Opcional: la factura hecha en otro sistema</span></div>
+            )}
             <RO label="Valor de la citología" value={invoice ? formatMoney(inv.unitValue) : defaults.valor !== '' ? formatMoney(base) : '—'} hint={invoice ? 'Según la factura' : 'Según el tarifario'} />
             <div className="field">
               <label htmlFor="entityId">Entidad</label>
