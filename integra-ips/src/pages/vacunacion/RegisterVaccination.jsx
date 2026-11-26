@@ -54,7 +54,9 @@ const RegisterVaccination = () => {
   const [paiPayer, setPaiPayer] = useState(null)
   useEffect(() => {
     if (!vaccine?.pai || !form?.billingOn) return setPaiPayer(null)
-    api.get('/vacunacion/pagador-pai', { params: { eps: f.epsId || undefined, regimen: f.regimen || undefined } }).then(({ data }) => setPaiPayer(data)).catch(() => setPaiPayer(null))
+    let live = true
+    api.get('/vacunacion/pagador-pai', { params: { eps: f.epsId || undefined, regimen: f.regimen || undefined }, noCache: true }).then(({ data }) => { if (live) setPaiPayer(data) }).catch(() => { if (live) setPaiPayer(null) })
+    return () => { live = false }
   }, [vaccine?.pai, form?.billingOn, f.epsId, f.regimen])
   const save = async (e) => {
     e.preventDefault(); setErr(''); setOk(null)
