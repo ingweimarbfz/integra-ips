@@ -1,13 +1,15 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
-import { MdAdd, MdEdit, MdDelete, MdPrint, MdArrowBack, MdErrorOutline, MdSave, MdEventNote, MdPlayArrow, MdSend, MdCheckCircle, MdCancel, MdRestore } from 'react-icons/md'
+import { MdAdd, MdEdit, MdDelete, MdPrint, MdArrowBack, MdErrorOutline, MdSave, MdEventNote, MdPlayArrow, MdSend, MdCheckCircle, MdCancel, MdRestore, MdReceiptLong, MdSearch, MdLinkOff } from 'react-icons/md'
 import api, { errorMessage } from '../../api/client'
 import { useAuth } from '../../context/AuthContext'
 import { useSettings } from '../../context/SettingsContext'
 import { PageHead, Card, Modal, Empty, Spinner, useToast } from '../../components/ui'
 import { PersonLookup, fmtDateTime } from './common'
 import { toLocalInput } from '../../components/ManualDateTime'
+import { inPlan } from '../../utils/permissions'
 import '../../components/cytology.css'
+import '../facturacion/facturacion.css'
 
 // IIPS-025 · Eventos previos: programación de servicios, actividades de educación y traslados que un cliente
 // contrata con anticipación. Generan la cotización y luego se cargan en el evento o traslado real.
@@ -149,6 +151,68 @@ export const PlannedEventsPage = () => {
 }
 
 // Detalle y cotización imprimible.
+// IIPS-038 · Factura del evento. Con Facturación activa se busca la factura hecha en Facturación → Servicios
+// facturables (por N° de factura o NIT del cliente); sin el módulo, se escribe el N° de la factura del otro sistema.
+const EventInvoice = ({ p, onChange }) => {
+  const { user } = useAuth()
+  const billingOn = inPlan(user, 'facturacion')
+  const [toast, toastNode] = useToast()
+  const [q, setQ] = useState(p.client?.nit || '')
+  const [number, setNumber] = useState('')
+  const [results, setResults] = useState(null)
+  const [busy, setBusy] = useState(false); const [error, setError] = useState('')
+  const [changing, setChanging] = useState(false)
+  const search = async () => {
+    setError(''); setBusy(true)
+    try { const { data } = await api.get('/eventos-previos-facturas', { params: { q } }); setResults(data) } catch (e) { setError(errorMessage(e)) } finally { setBusy(false) }
+  }
+  const save = async (body) => {
+    setError(''); setBusy(true)
+    try { const { data } = await api.put(`/eventos-previos/${p.id}/factura`, body); onChange(data); setChanging(false); setResults(null); setNumber(''); toast('Factura asociada al evento') } catch (e) { setError(errorMessage(e)) } finally { setBusy(false) }
+  }
+  const unlink = async () => { try { const { data } = await api.delete(`/eventos-previos/${p.id}/factura`); onChange(data); toast('Factura desvinculada') } catch (e) { toast(errorMessage(e), 'bad') } }
+  if (!['cotizado', 'aprobado', 'ejecutado'].includes(p.status)) return null
+  return (
+    <Card className="no-print" title="Factura del evento" icon={<MdReceiptLong style={{ color: 'var(--brand)' }} />}
+      subtitle={billingOn ? 'Factúralo en Facturación → Servicios facturables y busca aquí la factura por su número o por el NIT del cliente.' : 'La facturación se lleva en otro sistema: escribe el N° de la factura para dejar la relación.'}>
+      {p.invoice && !changing ? (
+        <div className="invoice-picked">
+          <div><span className="cy-field-label">Factura</span><strong>{p.invoice.number}</strong><span className="hint">{p.invoice.external ? 'Sistema externo' : 'Facturación del sistema'}</span></div>
+          {p.invoice.payer && <div><span className="cy-field-label">Pagó</span><strong>{p.invoice.payer}</strong></div>}
+          {p.invoice.total != null && <div><span className="cy-field-label">Valor facturado</span><strong>{money(p.invoice.total)}</strong>{p.invoice.total !== p.total && <span className="hint">Cotizado: {money(p.total)}</span>}</div>}
+          <div style={{ display: 'flex', gap: 6 }}>
+            <button type="button" className="btn btn-outline btn-sm" onClick={() => setChanging(true)}>Cambiar</button>
+            <button type="button" className="btn btn-ghost btn-sm" onClick={unlink}><MdLinkOff /> Quitar</button>
+          </div>
+        </div>
+      ) : billingOn ? (
+        <div className="stack" style={{ gap: 10 }}>
+          <div className="invoice-search">
+            <input className="input" value={q} onChange={(e) => setQ(e.target.value)} onKeyDown={(e) => { if (e.key === 'Enter') { e.preventDefault(); search() } }} placeholder="N° de factura (FV-…) o NIT / documento del cliente" aria-label="Buscar factura" />
+            <button type="button" className="btn btn-primary" onClick={search} disabled={q.trim().length < 3 || busy}>{busy ? <Spinner /> : <MdSearch />} Buscar factura</button>
+          </div>
+          {results && results.length === 0 && <div className="alert warn" style={{ margin: 0 }}><MdErrorOutline /><span>No hay facturas para “{q}”. <Link to="/facturacion/servicios">Facturar en Servicios facturables</Link>.</span></div>}
+          {results?.length > 0 && (
+            <ul className="list">{results.map((x) => (
+              <li key={x.id}><div className="grow"><strong>{x.number} · {x.payer || 'Sin cliente'}</strong><span>{x.date?.split('-').reverse().join('/')} · {x.service}{x.description ? ` · ${x.description}` : ''} · {money(x.total)}{x.usedBy ? ` · ya está en ${x.usedBy}` : ''}{x.linkedElsewhere ? ' · usada en otro servicio' : ''}</span></div>
+                <button type="button" className="btn btn-outline btn-sm" disabled={busy || Boolean(x.usedBy && x.usedBy !== p.code) || x.linkedElsewhere} onClick={() => save({ chargeId: x.id })}>Usar</button></li>
+            ))}</ul>
+          )}
+          {changing && <button type="button" className="btn btn-ghost btn-sm" style={{ alignSelf: 'flex-start' }} onClick={() => setChanging(false)}>Cancelar</button>}
+        </div>
+      ) : (
+        <div className="invoice-search">
+          <input className="input" value={number} onChange={(e) => setNumber(e.target.value)} maxLength={40} placeholder="N° de la factura en tu sistema" aria-label="Número de factura" />
+          <button type="button" className="btn btn-primary" onClick={() => save({ invoiceNumber: number })} disabled={!number.trim() || busy}>{busy ? <Spinner /> : <MdSave />} Guardar</button>
+          {changing && <button type="button" className="btn btn-ghost" onClick={() => setChanging(false)}>Cancelar</button>}
+        </div>
+      )}
+      {error && <div className="alert bad" style={{ margin: '10px 0 0' }}><MdErrorOutline /><span>{error}</span></div>}
+      {toastNode}
+    </Card>
+  )
+}
+
 export const PlannedEventDetail = () => {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -225,6 +289,7 @@ export const PlannedEventDetail = () => {
         </section>
         <footer className="cy-sheet-footer"><span>{settings.ipsName}</span><span>Elaboró: {p.createdBy || '—'} · {fmtDateTime(p.createdAt)}</span></footer>
       </article>
+      <div style={{ maxWidth: 900, margin: '16px auto 0' }}><EventInvoice p={p} onChange={setP} /></div>
       {editing && <PlannedForm initial={p} onClose={() => setEditing(false)} onSaved={(d) => { setEditing(false); setP(d); toast('Cambios guardados') }} />}
       {toastNode}
     </div>

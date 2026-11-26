@@ -7,7 +7,7 @@ const PHONE_RE = /^[0-9]{10}$/
 const EMAIL_RE = /^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i
 
 const EMPTY = {
-  fechaExamen: '', numLamina: '', eps: '', valor: '', entidad: '', regimen: '',
+  fechaExamen: '', numLamina: '', eps: '', valor: '', entidad: '', regimen: '', externalInvoice: '',
   nombre: '', apellidos: '', fechaNacimiento: '', tipoDocumento: '', numDocumento: '', lugarExped: '',
   direccion: '', celular: '', email: '', municipio: '', solicitudServ: '', ocupacion: '', estadoCivil: '',
   contacto: '', direccionContacto: '', celularContacto: '',
