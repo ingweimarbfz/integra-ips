@@ -62,7 +62,7 @@ export const EntityForm = ({ initial, defaultCategories = [], onClose, onSaved }
 }
 
 // Tipos de entidad con convenio o responsables de pago.
-export const ENTITY_KINDS = { eps: 'EPS', aseguradora: 'Aseguradora / ARL / SOAT', clinica: 'Clínica privada', hospital_publico: 'Hospital o ESE pública', ips: 'Otra IPS', empresa_publica: 'Empresa o entidad pública', empresa_privada: 'Empresa privada', otra: 'Otra institución' }
+export const ENTITY_KINDS = { eps: 'EPS', aseguradora: 'Aseguradora / ARL / SOAT', clinica: 'Clínica privada', hospital_publico: 'Hospital o ESE pública', ente_territorial: 'Ente territorial (Secretaría de Salud)', ips: 'Otra IPS', empresa_publica: 'Empresa o entidad pública', empresa_privada: 'Empresa privada', otra: 'Otra institución' }
 
 const EpsForm = ({ initial, discounts, onClose, onSaved }) => {
   const [f, setF] = useState(() => initial?.id
@@ -101,7 +101,7 @@ const EpsForm = ({ initial, discounts, onClose, onSaved }) => {
         )}
         <div className="form-grid" style={{ padding: 14, border: '1px solid var(--line)', borderRadius: 12 }}>
           <div className="field span-2"><label className="switch"><input type="checkbox" checked={f.withholdingAgent !== false} onChange={set('withholdingAgent')} /> Es agente retenedor (practica retención en la fuente al pagar)</label><span className="hint">Las EPS, clínicas, hospitales y empresas son agentes retenedores; una persona natural normalmente no.</span></div>
-          {['hospital_publico', 'empresa_publica'].includes(f.kind) && <>
+          {['hospital_publico', 'empresa_publica', 'ente_territorial'].includes(f.kind) && <>
             <div className="field"><label>Estampillas u otras deducciones (%)</label><input type="number" min="0" max="20" step="0.1" value={f.stampsPct ?? 0} onChange={set('stampsPct')} /><span className="hint">Las que descuenta la entidad pública al pagar (pro-hospital, pro-adulto mayor…)</span></div>
             <div className="field"><label>Nombre de la deducción</label><input value={f.stampsLabel || ''} onChange={set('stampsLabel')} placeholder="Estampilla pro-hospital" /></div>
           </>}
